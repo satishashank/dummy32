@@ -10,6 +10,6 @@ The `core.fst` is the waveform file in the `sim_build` folder
 
 Instructions are a list of hex values in the test.py
 
-## Regesters
+## Registers
 
 Registers are initialized by the `$readmemh` instruction and are loaded into `registerFile`
