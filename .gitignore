@@ -1,0 +1,6 @@
+a.out
+__pycache__
+sim_build
+alu.v
+femto.v
+results.xml
