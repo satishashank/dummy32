@@ -9,8 +9,10 @@ module controlUnit (
     output logic jump,
     output logic [3:0] aluCntrl,
     output logic [2:0] immCntrl,
-    output logic aluSrc,
-    output logic inv
+    output logic [1:0] aluSrcA,
+    output logic aluSrcB,
+    output logic inv,
+    output logic [1:0] regSrc
   );
 
   localparam [4:0]
@@ -32,13 +34,21 @@ module controlUnit (
              IMM_TYPE_B    = 3'b100,
              IMM_TYPE_U    = 3'b101,
              IMM_TYPE_J    = 3'b110;
+  localparam [1:0]
+             ALU_SRC = 2'b00,
+             MEM_SRC = 2'b01,
+             PC_SRC = 2'b11,
+             DC = 2'b10;
+  localparam [1:0]
+             RS1 = 0,
+             ZERO = 2'b01,
+             PC = 2'b11;
 
-  assign aluSrc = |immCntrl;
+  assign aluSrcB = |immCntrl;
 
   always_comb
   begin
     case (op)
-
       OPCODE_RTYPE,OPCODE_IARTHTYPE :
       begin // R-type/I-type arith
         aluCntrl = {funct7_6,funct3};
@@ -48,6 +58,8 @@ module controlUnit (
         branch = 0;
         jump = 0;
         immCntrl = op[3] ? IMM_TYPE_DEFAULT : ((~funct3[1]&funct3[0]) ? IMM_TYPE_SHAMT:IMM_TYPE_I); //shamt vs imm
+        regSrc = ALU_SRC;
+        aluSrcA = RS1;
       end
       OPCODE_STYPE :
       begin // S-type
@@ -58,6 +70,8 @@ module controlUnit (
         branch = 0;
         jump = 0;
         immCntrl = IMM_TYPE_S;
+        regSrc = DC;
+        aluSrcA = RS1;
       end
       OPCODE_BTYPE :
       begin // B-type
@@ -68,6 +82,8 @@ module controlUnit (
         jump = 0;
         immCntrl = IMM_TYPE_B;
         inv = funct3[0];
+        regSrc = DC;
+        aluSrcA = RS1;
       end
       OPCODE_ILOADTYPE,OPCODE_AUIPC,OPCODE_LUI :
       begin // (I)L-type/U-type
@@ -78,6 +94,8 @@ module controlUnit (
         jump = 0;
         immCntrl = op[0]?IMM_TYPE_U:IMM_TYPE_I;
         inv = 0;
+        regSrc = op[2]?ALU_SRC:MEM_SRC;
+        aluSrcA = op[3]?ZERO:PC;
       end
       OPCODE_JAL,OPCODE_JALR :
       begin
@@ -88,6 +106,8 @@ module controlUnit (
         jump = 1;
         immCntrl = op[1]?IMM_TYPE_J:IMM_TYPE_I;
         inv = 0;
+        regSrc = PC_SRC;
+        aluSrcA = RS1;
       end
       default:
       begin
@@ -98,7 +118,10 @@ module controlUnit (
         jump = 0;
         immCntrl = 0;
         inv = 0;
+        regSrc = DC;
+        aluSrcA = RS1;
       end
     endcase
   end
+
 endmodule

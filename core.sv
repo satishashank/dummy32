@@ -1,10 +1,12 @@
 `timescale 1ns/1ps
 module core(
     input logic clk,
-    input logic [31:0] readData,
-    output logic [31:0] writeData,
-    output logic writeEn,
-    output logic [31:0] memAddr
+    input logic [31:0] imemRdata,
+    output logic [31:0] imemAddr,
+    input logic [31:0] dmemRdata,
+    output logic [31:0] dmemWdata,
+    output logic dmemWen,
+    output logic [31:0] dmemAddr
   );
 
   //FETCH STAGE
@@ -12,7 +14,7 @@ module core(
 
   assign pcF_ = pcSelE?pcTargetE:pcFplus4;
   assign pcFplus4 = pcF + 4;
-  assign memAddr = pcF; //edit
+  assign imemAddr = pcF; //edit
 
   //DECODE STAGE
   logic [31:0] instrD;
@@ -25,16 +27,18 @@ module core(
   logic [31:0] immExtD;
   logic [31:0] immExtDsv;
 
-  logic regWriteD,memWriteD,branchD,jumpD,aluSrcD,invD;
-  logic regWriteDsv,memWriteDsv,branchDsv,jumpDsv,aluSrcDsv,invDsv;
-
+  logic regWriteD,memWriteD,branchD,jumpD,aluSrcBD,invD;
+  logic regWriteDsv,memWriteDsv,branchDsv,jumpDsv,aluSrcBDsv,invDsv;
+  logic [1:0] aluSrcAD;
+  logic [1:0] aluSrcADsv;
+  logic [1:0] regSrcD;
+  logic [1:0] regSrcDsv;
   logic [3:0] aluCntrlD,aluCntrlDsv;
   logic [2:0] immCntrlD;
 
   assign instrD = instrFsv;
   assign pcD = pcFsv;
   assign pcDplus4 = pcFplus4sv;
-  assign writeEn = memWriteD; //edit
   assign rdD = instrD[11:7];
 
 
@@ -47,13 +51,16 @@ module core(
   logic [31:0] pcEplus4sv;
   logic branchFlagE,pcSelE;
 
-  logic regWriteE,memWriteE,branchE,jumpE,aluSrcE,invE;
+  logic regWriteE,memWriteE,branchE,jumpE,aluSrcBE,invE;
   logic regWriteEsv,memWriteEsv;
   logic [31:0] rs1E,rs2E;
   logic [4:0] rdE;
   logic [31:0] rs2Esv;
   logic [4:0] rdEsv;
   logic [3:0] aluCntrlE;
+  logic [1:0] aluSrcAE;
+  logic [1:0] regSrcE;
+  logic [1:0] regSrcEsv;
 
   assign rs1E = rs1Dsv;
   assign rs2E = rs2Dsv;
@@ -65,17 +72,85 @@ module core(
   assign jumpE = jumpDsv;
   assign regWriteE = regWriteDsv;
   assign memWriteE = memWriteDsv;
-  assign aluSrcE = aluSrcDsv;
+  assign aluSrcBE = aluSrcBDsv;
+  assign aluSrcAE = aluSrcADsv;
+  assign regSrcE = regSrcDsv;
   assign invE = invDsv;
   assign aluCntrlE = aluCntrlDsv;
 
-  assign srcAE = rs1E; //edit hazard
-  assign srcBE = aluSrcE?immExtE:rs2E;
+  always_comb
+  begin
+    case (aluSrcAE)
+      2'b00:
+        srcAE = rs1E;
+      2'b01:
+        srcAE = 0;
+      2'b11:
+        srcAE = pcE;
+      default:
+        srcAE = 0;
+    endcase
+  end
+  assign srcBE = aluSrcBE?immExtE:rs2E;
   assign pcTargetE = immExtE + pcE;
   assign pcSelE = (branchE&branchFlagE) ^ jumpE;
 
   //MEMORY STAGE
-  
+  logic [31:0] aluResultM,aluResultMsv;
+  logic [31:0] writeDataM;
+  logic [4:0] rdM;
+  logic [4:0] rdMsv;
+  logic [31:0] pcMplus4;
+  logic [31:0] pcMplus4sv;
+  logic [31:0] dmemRdataMsv;
+  logic regWriteM;
+  logic regWriteMsv;
+  logic memWriteM;
+  logic [1:0] regSrcM,regSrcMsv;
+
+  assign memWriteM = memWriteEsv;
+  assign aluResultM = aluResultEsv;
+  assign rdM = rdEsv;
+  assign writeDataM = rs2Esv;
+  assign regWriteM = regWriteEsv;
+  assign dmemWen = memWriteM;
+  assign pcMplus4 = pcEplus4sv;
+  assign dmemAddr = aluResultM;
+  assign dmemWdata = writeDataM;
+  assign regSrcM = regSrcEsv;
+
+  //WRITEBACK STAGE
+  localparam [1:0]
+             ALU_SRC = 2'b00,
+             MEM_SRC = 2'b01,
+             PC_SRC = 2'b11;
+  logic [4:0] rdW;
+  logic [31:0] pcWplus4;
+  logic [31:0] aluResultW;
+  logic [31:0] dmemRdataW;
+  logic [31:0] resultW;
+  logic [1:0] regSrcW;
+  logic regWriteW;
+
+  assign rdW = rdMsv;
+  assign regSrcW = regSrcMsv;
+  assign pcWplus4 = pcMplus4sv;
+  assign dmemRdataW = dmemRdataMsv;
+  assign aluResultW = aluResultMsv;
+  assign regWriteW = regWriteMsv;
+  always_comb
+  begin
+    case (regSrcW)
+      ALU_SRC:
+        resultW = aluResultW;
+      MEM_SRC:
+        resultW = dmemRdataW;
+      PC_SRC:
+        resultW = pcWplus4;
+      default:
+        resultW = 0;
+    endcase
+  end
 
   controlUnit cntrlU(
                 .op(instrD[6:2]),
@@ -87,7 +162,9 @@ module core(
                 .jump(jumpD),
                 .aluCntrl(aluCntrlD),
                 .immCntrl(immCntrlD),
-                .aluSrc(aluSrcD),
+                .aluSrcB(aluSrcBD),
+                .aluSrcA(aluSrcAD),
+                .regSrc(regSrcD),
                 .inv(invD)
               );
   extend extImm(
@@ -96,11 +173,11 @@ module core(
            .immExt(immExtD)
          );
   registerFile regF(
-                 .writeData(aluResultE), //edit
+                 .writeData(resultW), //edit
                  .addr1(instrD[19:15]),
                  .addr2(instrD[24:20]),
-                 .writeAddr(rdD),
-                 .writeEn(regWriteD),
+                 .writeAddr(rdW),
+                 .writeEn(regWriteW),
                  .clk(clk),
                  .reg1(rs1D),
                  .reg2(rs2D)
@@ -120,7 +197,7 @@ module core(
     begin : fetchReg
       pcFsv <= pcF;
       pcFplus4sv <= pcFplus4;
-      instrFsv <= readData;
+      instrFsv <= imemRdata;
     end
     begin : decodeReg
       rs1Dsv <= rs1D;
@@ -136,16 +213,27 @@ module core(
       memWriteDsv<= memWriteD;
       branchDsv<= branchD;
       jumpDsv <= jumpD;
-      aluSrcDsv <= aluSrcD;
+      aluSrcBDsv <= aluSrcBD;
+      aluSrcADsv <= aluSrcAD;
+      regSrcDsv <= regSrcD;
     end
     begin : executeReg
       aluResultEsv <=aluResultE;
       rs2Esv <= rs2E;
       rdEsv <= rdE;
-      pcEplus4sv<=pcEplus4;
-
+      pcEplus4sv <=pcEplus4;
       regWriteEsv <= regWriteE;
+      regSrcEsv <= regSrcE;
       memWriteEsv <= memWriteE;
     end
+    begin : memoryReg
+      dmemRdataMsv <= dmemRdata;
+      rdMsv <= rdM;
+      pcMplus4sv<=pcMplus4;
+      regWriteMsv <= regWriteM;
+      aluResultMsv <= aluResultM;
+      regSrcMsv <= regSrcM;
+    end
+
   end
 endmodule
