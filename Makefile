@@ -1,14 +1,12 @@
-# Makefile
-
-# defaults
-SIM ?= icarus
+SIM ?= verilator
 TOPLEVEL_LANG ?= verilog
 WAVES = 1
-VERILOG_SOURCES += $(PWD)/core.v
-# use VHDL_SOURCES for VHDL files
+VERILOG_SOURCES += $(PWD)/*.sv
+EXTRA_ARGS += --trace --trace-structs --timing -j 0
+COMPILE_ARGS += -j 0
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
-TOPLEVEL = core
+TOPLEVEL = TB
 
 # MODULE is the basename of the Python test file
 MODULE = test
