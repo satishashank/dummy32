@@ -14,7 +14,7 @@ module extend(input logic [2:0] immCntrl,
   begin
     case (immCntrl)
       IMM_TYPE_SHAMT:
-        immExt = {27'b0,immSrc[19:15]};
+        immExt = {27'b0,immSrc[17:13]};
       IMM_TYPE_I:
         immExt = {{20{immSrc[24]}},immSrc[24:13]};
       IMM_TYPE_S:
