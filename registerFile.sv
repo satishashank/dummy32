@@ -13,7 +13,7 @@ module registerFile(
   logic [31:0] registers [31:0];
   assign reg1 = |addr1 ? registers[addr1] : 0;
   assign reg2 = |addr2 ? registers[addr2] : 0;
-  always@(posedge clk)
+  always@(negedge clk)
   begin
     if (writeEn & |writeAddr)
       registers[writeAddr] <= writeData;

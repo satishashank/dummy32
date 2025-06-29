@@ -1,5 +1,4 @@
 `timescale 1ns/1ps
-
 module TB;
 
   // Clock and Reset
@@ -26,18 +25,14 @@ module TB;
          .dmemAddr(dmemAddr)
        );
 
-  // Testbench logic
   initial
   begin
-    // Initialize inputs
     imemRdata = 32'h00000000;
     dmemRdata = 32'h00000000;
 
-    // Start waveform dump
     $dumpfile("");
     $dumpvars(0, TB);
 
-    // Run for some time
   end
 
 endmodule

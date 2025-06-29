@@ -19,8 +19,8 @@ module core(
   //DECODE STAGE
   logic [31:0] instrD;
   logic [31:0] rs1D,rs2D;
-  logic [4:0] rdD;
-  logic [4:0] rdDsv;
+  logic [4:0] rdD,r1AddrD,r2AddrD;
+  logic [4:0] rdDsv,r1AddrDsv,r2AddrDsv;
   logic [31:0] rs1Dsv,rs2Dsv;
   logic [31:0] pcD,pcDplus4;
   logic [31:0] pcDsv,pcDplus4sv;
@@ -29,8 +29,8 @@ module core(
 
   logic regWriteD,memWriteD,branchD,jumpD,aluSrcBD,invD;
   logic regWriteDsv,memWriteDsv,branchDsv,jumpDsv,aluSrcBDsv,invDsv;
-  logic [1:0] aluSrcAD;
-  logic [1:0] aluSrcADsv;
+  logic aluSrcAD;
+  logic aluSrcADsv;
   logic [1:0] regSrcD;
   logic [1:0] regSrcDsv;
   logic [3:0] aluCntrlD,aluCntrlDsv;
@@ -40,6 +40,8 @@ module core(
   assign pcD = pcFsv;
   assign pcDplus4 = pcFplus4sv;
   assign rdD = instrD[11:7];
+  assign r1AddrD = instrD[19:15];
+  assign r2AddrD = instrD[24:20];
 
 
   //EXECUTE STAGE
@@ -53,20 +55,25 @@ module core(
 
   logic regWriteE,memWriteE,branchE,jumpE,aluSrcBE,invE;
   logic regWriteEsv,memWriteEsv;
-  logic [31:0] rs1E,rs2E;
-  logic [4:0] rdE;
+  logic [31:0] rs1E,rs2E,rs1hzE,rs2hzE;
+  logic [4:0] rdE,r1AddrE,r2AddrE;
   logic [31:0] rs2Esv;
   logic [4:0] rdEsv;
   logic [3:0] aluCntrlE;
-  logic [1:0] aluSrcAE;
+  logic aluSrcAE;
   logic [1:0] regSrcE;
   logic [1:0] regSrcEsv;
+  logic [1:0] fwdAE;
+  logic [1:0] fwdBE;
 
   assign rs1E = rs1Dsv;
   assign rs2E = rs2Dsv;
   assign pcE = pcDsv;
   assign pcEplus4 = pcDplus4sv;
   assign rdE = rdDsv;
+  assign r1AddrE = r1AddrDsv;
+  assign r2AddrE = r2AddrDsv;
+
   assign immExtE = immExtDsv;
   assign branchE = branchDsv;
   assign jumpE = jumpDsv;
@@ -78,20 +85,39 @@ module core(
   assign invE = invDsv;
   assign aluCntrlE = aluCntrlDsv;
 
+
+  //HAZARD MUX
   always_comb
   begin
-    case (aluSrcAE)
+    case (fwdAE)
       2'b00:
-        srcAE = rs1E;
+        rs1hzE = rs1E; //No fwd
+      2'b10:
+        rs1hzE = aluResultM; //Mem fwd
       2'b01:
-        srcAE = 0;
-      2'b11:
-        srcAE = pcE;
+        rs1hzE = resultW; //Write Back fwd
+
       default:
-        srcAE = 0;
+        rs1hzE = rs1E; //No fwd
     endcase
   end
-  assign srcBE = aluSrcBE?immExtE:rs2E;
+  always_comb
+  begin
+    case (fwdBE)
+      2'b00:
+        rs2hzE = rs2E; //No fwd
+      2'b10:
+        rs2hzE = aluResultM; //Mem fwd
+      2'b01:
+        rs2hzE = resultW; //Write Back fwd
+      default:
+        rs2hzE = rs2E; //No fwd
+    endcase
+  end
+  assign srcAE = aluSrcAE?pcE:rs1hzE;
+  assign srcBE = aluSrcBE?immExtE:rs2hzE;
+
+
   assign pcTargetE = immExtE + pcE;
   assign pcSelE = (branchE&branchFlagE) ^ jumpE;
 
@@ -190,7 +216,16 @@ module core(
         .aluResult(aluResultE),
         .branchFlag(branchFlagE)
       );
-
+  hazardUnit hzrdUnit (
+               .fwdAE(fwdAE),
+               .fwdBE(fwdBE),
+               .r1AddrE(r1AddrE),
+               .r2AddrE(r2AddrE),
+               .rdM(rdM),
+               .rdW(rdW),
+               .regWriteM(regWriteM),
+               .regWriteW(regWriteW)
+             );
   always_ff@(posedge clk)
   begin
     pcF <= pcF_;
@@ -202,6 +237,8 @@ module core(
     begin : decodeReg
       rs1Dsv <= rs1D;
       rs2Dsv <= rs2D;
+      r1AddrDsv <= r1AddrD;
+      r2AddrDsv <= r2AddrD;
       rdDsv <= rdD;
       pcDplus4sv <= pcDplus4;
       pcDsv <= pcD;

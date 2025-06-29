@@ -45,6 +45,8 @@ module alu(input logic [3:0] aluCntrl,
         aluResult = srcA | srcB;
       4'b0111:
         aluResult = srcA & srcB;
+      4'b1111:
+        aluResult = srcB;
       default:
       begin
         aluResult = 0;
