@@ -12,10 +12,6 @@ module core(
   //FETCH STAGE
   logic [31:0] pcF,pcFplus4,pcFsv,pcFplus4sv,instrFsv,pcF_;
 
-  assign pcF_ = pcSelE?pcTargetE:pcFplus4;
-  assign pcFplus4 = pcF + 4;
-  assign imemAddr = pcF; //edit
-
   //DECODE STAGE
   logic [31:0] instrD;
   logic [31:0] rs1D,rs2D;
@@ -35,14 +31,6 @@ module core(
   logic [1:0] regSrcDsv;
   logic [3:0] aluCntrlD,aluCntrlDsv;
   logic [2:0] immCntrlD;
-
-  assign instrD = instrFsv;
-  assign pcD = pcFsv;
-  assign pcDplus4 = pcFplus4sv;
-  assign rdD = instrD[11:7];
-  assign r1AddrD = instrD[19:15];
-  assign r2AddrD = instrD[24:20];
-
 
   //EXECUTE STAGE
   logic [31:0] srcAE;
@@ -66,6 +54,21 @@ module core(
   logic [1:0] fwdAE;
   logic [1:0] fwdBE;
 
+  //FETCH STAGE
+  assign pcF_ = pcSelE?pcTargetE:pcFplus4;
+  assign pcFplus4 = pcF + 4;
+  assign imemAddr = pcF; //edit
+
+  //DECODE STAGE
+  assign instrD = instrFsv;
+  assign pcD = pcFsv;
+  assign pcDplus4 = pcFplus4sv;
+  assign rdD = instrD[11:7];
+  assign r1AddrD = instrD[19:15];
+  assign r2AddrD = instrD[24:20];
+
+
+  //EXECUTE STAGE
   assign rs1E = rs1Dsv;
   assign rs2E = rs2Dsv;
   assign pcE = pcDsv;
@@ -85,6 +88,31 @@ module core(
   assign invE = invDsv;
   assign aluCntrlE = aluCntrlDsv;
 
+  //MEMORY STAGE
+  logic [31:0] aluResultM,aluResultMsv;
+  logic [31:0] writeDataM;
+  logic [4:0] rdM;
+  logic [4:0] rdMsv;
+  logic [31:0] pcMplus4;
+  logic [31:0] pcMplus4sv;
+  logic [31:0] dmemRdataMsv;
+  logic regWriteM;
+  logic regWriteMsv;
+  logic memWriteM;
+  logic [1:0] regSrcM,regSrcMsv;
+
+  //WRITEBACK STAGE
+  localparam [1:0]
+             ALU_SRC = 2'b00,
+             MEM_SRC = 2'b01,
+             PC_SRC = 2'b11;
+  logic [4:0] rdW;
+  logic [31:0] pcWplus4;
+  logic [31:0] aluResultW;
+  logic [31:0] dmemRdataW;
+  logic [31:0] resultW;
+  logic [1:0] regSrcW;
+  logic regWriteW;
 
   //HAZARD MUX
   always_comb
@@ -121,19 +149,9 @@ module core(
   assign pcTargetE = immExtE + pcE;
   assign pcSelE = (branchE&branchFlagE) ^ jumpE;
 
-  //MEMORY STAGE
-  logic [31:0] aluResultM,aluResultMsv;
-  logic [31:0] writeDataM;
-  logic [4:0] rdM;
-  logic [4:0] rdMsv;
-  logic [31:0] pcMplus4;
-  logic [31:0] pcMplus4sv;
-  logic [31:0] dmemRdataMsv;
-  logic regWriteM;
-  logic regWriteMsv;
-  logic memWriteM;
-  logic [1:0] regSrcM,regSrcMsv;
 
+
+  //MEMORY STAGE
   assign memWriteM = memWriteEsv;
   assign aluResultM = aluResultEsv;
   assign rdM = rdEsv;
@@ -145,19 +163,9 @@ module core(
   assign dmemWdata = writeDataM;
   assign regSrcM = regSrcEsv;
 
-  //WRITEBACK STAGE
-  localparam [1:0]
-             ALU_SRC = 2'b00,
-             MEM_SRC = 2'b01,
-             PC_SRC = 2'b11;
-  logic [4:0] rdW;
-  logic [31:0] pcWplus4;
-  logic [31:0] aluResultW;
-  logic [31:0] dmemRdataW;
-  logic [31:0] resultW;
-  logic [1:0] regSrcW;
-  logic regWriteW;
 
+
+  //WRITEBACK STAGE
   assign rdW = rdMsv;
   assign regSrcW = regSrcMsv;
   assign pcWplus4 = pcMplus4sv;

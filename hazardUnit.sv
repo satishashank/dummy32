@@ -12,6 +12,7 @@ module hazardUnit(output logic [1:0] fwdAE,
   assign r1EqW = (r1AddrE == rdW)&&(rdW != 0);
   assign r2EqW = (r2AddrE == rdW)&&(rdW != 0);
   always_comb
+  begin
     if (r1EqMem&regWriteM)
     begin
       fwdAE = 2'b10;
@@ -24,9 +25,9 @@ module hazardUnit(output logic [1:0] fwdAE,
     begin
       fwdAE = 2'b00;
     end
-  begin
   end
   always_comb
+  begin
     if (r2EqMem&regWriteM)
     begin
       fwdBE = 2'b10;
@@ -39,6 +40,5 @@ module hazardUnit(output logic [1:0] fwdAE,
     begin
       fwdBE = 2'b00;
     end
-  begin
   end
 endmodule
