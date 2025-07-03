@@ -67,7 +67,6 @@ module core(
   assign r1AddrD = instrD[19:15];
   assign r2AddrD = instrD[24:20];
 
-
   //EXECUTE STAGE
   assign rs1E = rs1Dsv;
   assign rs2E = rs2Dsv;
@@ -105,7 +104,7 @@ module core(
   localparam [1:0]
              ALU_SRC = 2'b00,
              MEM_SRC = 2'b01,
-             PC_SRC = 2'b11;
+             PC_SRC = 2'b10;
   logic [4:0] rdW;
   logic [31:0] pcWplus4;
   logic [31:0] aluResultW;
@@ -145,11 +144,11 @@ module core(
   assign srcAE = aluSrcAE?pcE:rs1hzE;
   assign srcBE = aluSrcBE?immExtE:rs2hzE;
 
-
   assign pcTargetE = immExtE + pcE;
   assign pcSelE = (branchE&branchFlagE) ^ jumpE;
 
-
+  //HAZARD SIGNALS
+  logic stallF,stallD,flushE;
 
   //MEMORY STAGE
   assign memWriteM = memWriteEsv;
@@ -162,8 +161,6 @@ module core(
   assign dmemAddr = aluResultM;
   assign dmemWdata = writeDataM;
   assign regSrcM = regSrcEsv;
-
-
 
   //WRITEBACK STAGE
   assign rdW = rdMsv;
@@ -232,17 +229,51 @@ module core(
                .rdM(rdM),
                .rdW(rdW),
                .regWriteM(regWriteM),
-               .regWriteW(regWriteW)
+               .regWriteW(regWriteW),
+               .stallD(stallD),
+               .stallF(stallF),
+               .flushE(flushE),
+               .r1AddrD(r1AddrD),
+               .r2AddrD(r2AddrD),
+               .rdE(rdE),
+               .regSrcE0(regSrcE[0])
              );
   always_ff@(posedge clk)
   begin
-    pcF <= pcF_;
+    if (!stallF)
+    begin : PC
+      pcF <= pcF_;
+    end
+    if (!stallD)
     begin : fetchReg
       pcFsv <= pcF;
       pcFplus4sv <= pcFplus4;
       instrFsv <= imemRdata;
     end
+    if (flushE)
     begin : decodeReg
+
+      rs1Dsv <= 0;
+      rs2Dsv <= 0;
+      r1AddrDsv <= 0;
+      r2AddrDsv <= 0;
+      rdDsv <= 0;
+      pcDplus4sv <= 0;
+      pcDsv <= 0;
+      immExtDsv <= 0;
+
+      aluCntrlDsv <= 0;
+      invDsv <= 0;
+      regWriteDsv<= 0;
+      memWriteDsv<= 0;
+      branchDsv<= 0;
+      jumpDsv <= 0;
+      aluSrcBDsv <= 0;
+      aluSrcADsv <= 0;
+      regSrcDsv <= 0;
+    end
+    else
+    begin
       rs1Dsv <= rs1D;
       rs2Dsv <= rs2D;
       r1AddrDsv <= r1AddrD;
@@ -262,6 +293,7 @@ module core(
       aluSrcADsv <= aluSrcAD;
       regSrcDsv <= regSrcD;
     end
+
     begin : executeReg
       aluResultEsv <=aluResultE;
       rs2Esv <= rs2E;
@@ -279,6 +311,5 @@ module core(
       aluResultMsv <= aluResultM;
       regSrcMsv <= regSrcM;
     end
-
   end
 endmodule

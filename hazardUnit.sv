@@ -1,12 +1,26 @@
 module hazardUnit(output logic [1:0] fwdAE,
                     output logic [1:0] fwdBE,
+                    output logic flushE,
+                    output logic stallD,
+                    output logic stallF,
                     input logic [4:0] r1AddrE,
                     input logic [4:0] r2AddrE,
+                    input logic [4:0] r1AddrD,
+                    input logic [4:0] r2AddrD,
                     input logic [4:0] rdM,
+                    input logic [4:0] rdE,
                     input logic [4:0] rdW,
                     input logic regWriteM,
-                    input logic regWriteW);
+                    input logic regWriteW,
+                    input logic regSrcE0
+                   );
   logic r1EqMem,r2EqMem,r1EqW,r2EqW;
+  logic lwStall;
+
+  assign stallD = lwStall;
+  assign flushE = lwStall;
+  assign stallF = lwStall;
+  assign lwStall = regSrcE0&((r1AddrD==rdE)|(r2AddrD==rdE))&&(rdE!=0);
   assign r1EqMem = (r1AddrE == rdM)&&(rdM != 0);
   assign r2EqMem = (r2AddrE == rdM)&&(rdM != 0);
   assign r1EqW = (r1AddrE == rdW)&&(rdW != 0);

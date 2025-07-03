@@ -35,7 +35,7 @@ module controlUnit (
   localparam [1:0]
              ALU_SRC = 2'b00,
              MEM_SRC = 2'b01,
-             PC_SRC = 2'b11;
+             PC_SRC = 2'b10;
 
   localparam
     RS1 = 1'b0,
