@@ -54,6 +54,32 @@ module core(
   logic [1:0] fwdAE;
   logic [1:0] fwdBE;
 
+  //MEMORY STAGE
+  logic [31:0] aluResultM,aluResultMsv;
+  logic [31:0] writeDataM;
+  logic [4:0] rdM;
+  logic [4:0] rdMsv;
+  logic [31:0] pcMplus4;
+  logic [31:0] pcMplus4sv;
+  logic [31:0] dmemRdataMsv;
+  logic regWriteM;
+  logic regWriteMsv;
+  logic memWriteM;
+  logic [1:0] regSrcM,regSrcMsv;
+
+  //WRITEBACK STAGE
+  localparam [1:0]
+             ALU_SRC = 2'b00,
+             MEM_SRC = 2'b01,
+             PC_SRC = 2'b10;
+  logic [4:0] rdW;
+  logic [31:0] pcWplus4;
+  logic [31:0] aluResultW;
+  logic [31:0] dmemRdataW;
+  logic [31:0] resultW;
+  logic [1:0] regSrcW;
+  logic regWriteW;
+
   //FETCH STAGE
   assign pcF_ = pcSelE?pcTargetE:pcFplus4;
   assign pcFplus4 = pcF + 4;
@@ -87,31 +113,6 @@ module core(
   assign invE = invDsv;
   assign aluCntrlE = aluCntrlDsv;
 
-  //MEMORY STAGE
-  logic [31:0] aluResultM,aluResultMsv;
-  logic [31:0] writeDataM;
-  logic [4:0] rdM;
-  logic [4:0] rdMsv;
-  logic [31:0] pcMplus4;
-  logic [31:0] pcMplus4sv;
-  logic [31:0] dmemRdataMsv;
-  logic regWriteM;
-  logic regWriteMsv;
-  logic memWriteM;
-  logic [1:0] regSrcM,regSrcMsv;
-
-  //WRITEBACK STAGE
-  localparam [1:0]
-             ALU_SRC = 2'b00,
-             MEM_SRC = 2'b01,
-             PC_SRC = 2'b10;
-  logic [4:0] rdW;
-  logic [31:0] pcWplus4;
-  logic [31:0] aluResultW;
-  logic [31:0] dmemRdataW;
-  logic [31:0] resultW;
-  logic [1:0] regSrcW;
-  logic regWriteW;
 
   //HAZARD MUX
   always_comb
@@ -148,7 +149,7 @@ module core(
   assign pcSelE = (branchE&branchFlagE) ^ jumpE;
 
   //HAZARD SIGNALS
-  logic stallF,stallD,flushE;
+  logic stallF,stallD,flushE,flushD;
 
   //MEMORY STAGE
   assign memWriteM = memWriteEsv;
@@ -233,10 +234,12 @@ module core(
                .stallD(stallD),
                .stallF(stallF),
                .flushE(flushE),
+               .flushD(flushD),
                .r1AddrD(r1AddrD),
                .r2AddrD(r2AddrD),
                .rdE(rdE),
-               .regSrcE0(regSrcE[0])
+               .regSrcE0(regSrcE[0]),
+               .pcSelE(pcSelE)
              );
   always_ff@(posedge clk)
   begin
@@ -250,9 +253,14 @@ module core(
       pcFplus4sv <= pcFplus4;
       instrFsv <= imemRdata;
     end
+    if (flushD)
+    begin
+      pcFsv <= 0;
+      pcFplus4sv <= 0;
+      instrFsv <= 0;
+    end
     if (flushE)
     begin : decodeReg
-
       rs1Dsv <= 0;
       rs2Dsv <= 0;
       r1AddrDsv <= 0;
