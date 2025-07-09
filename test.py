@@ -36,30 +36,29 @@ program = [
 ]
 
 
-
-
-
 @cocotb.test()
 async def isa_test(dut):
     """Try accessing the design."""
     clk = Clock(dut.clk, 1, "ns")
     cocotb.start_soon(clk.start())
-    dut.dmemRdata.value = 0xFFAFFA
     writeData = []
     writeAddr = []
-    c = True
-    for i in program:
+    for i in range(1):
+        dut.rst.value = 1
         await Timer(1, "ns")
-        dut.imemRdata.value = i
-        writeData.append(dut.uut.regF.writeData.value)
-        writeAddr.append(dut.uut.regF.writeAddr.value)
-
-    for i in range(10):
-        await Timer(1,"ns")
-        writeData.append(dut.uut.regF.writeData.value)
-        writeAddr.append(dut.uut.regF.writeAddr.value)
+    dut.rst.value = 0
+    for i in range(15):
+        await Timer(1, "ns")
+        if (dut.uut.regF.writeEn.value == 1):
+            try:
+                writeData.append(dut.uut.regF.writeData.value)
+                writeAddr.append(dut.uut.regF.writeAddr.value)
+            except:
+                pass
     for addr,data in zip(writeAddr,writeData):
-        msg = f"{hex(addr)},{hex(data)}"
-        cocotb.log.info(msg)
+        try:
+            msg = f"{hex(addr)},{hex(data)}"
+            cocotb.log.info(msg)
+        except:pass
     
-    await Timer(10,"ns")
+    await Timer(5,"ns")
