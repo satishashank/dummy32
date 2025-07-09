@@ -3,6 +3,7 @@ module TB;
 
   // Clock and Reset
   logic clk;
+  logic rst;
 
   // Signals for imem and dmem
   logic [31:0] imemRdata;
@@ -17,6 +18,7 @@ module TB;
   // Instantiate the core module
   core uut (
          .clk(clk),
+         .rst(rst),
          .imemRdata(imemRdata),
          .imemAddr(imemAddr),
          .dmemRdata(dmemRdata),
@@ -24,12 +26,13 @@ module TB;
          .dmemWen(dmemWen),
          .dmemAddr(dmemAddr)
        );
+  imem instr (
+         .rAddr(imemAddr),
+         .rData(imemRdata)
+       );
 
   initial
   begin
-    imemRdata = 32'h00000000;
-    dmemRdata = 32'h00000000;
-
     $dumpfile("");
     $dumpvars(0, TB);
 
