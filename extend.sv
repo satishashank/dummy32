@@ -20,7 +20,7 @@ module extend(input logic [2:0] immCntrl,
       IMM_TYPE_S:
         immExt = {{20{immSrc[24]}},immSrc[24:18],immSrc[4:0]};
       IMM_TYPE_B:
-        immExt = {{21{immSrc[24]}},immSrc[0],immSrc[23:18],immSrc[4:1]};
+        immExt = {{20{immSrc[24]}},immSrc[0],immSrc[23:18],immSrc[4:1],1'b0};
       IMM_TYPE_U:
         immExt = {immSrc[24:5],12'b0};
       IMM_TYPE_J:
