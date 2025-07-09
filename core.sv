@@ -1,6 +1,7 @@
 `timescale 1ns/1ps
 module core(
     input logic clk,
+    input logic rst,
     input logic [31:0] imemRdata,
     output logic [31:0] imemAddr,
     input logic [31:0] dmemRdata,
@@ -25,11 +26,13 @@ module core(
 
   logic regWriteD,memWriteD,branchD,jumpD,aluSrcBD,invD;
   logic regWriteDsv,memWriteDsv,branchDsv,jumpDsv,aluSrcBDsv,invDsv;
-  logic aluSrcAD;
-  logic aluSrcADsv;
+  logic [1:0] aluSrcAD;
+  logic [1:0] aluSrcADsv;
+  logic pcTargetSrcD,pcTargetSrcDsv;
   logic [1:0] regSrcD;
   logic [1:0] regSrcDsv;
-  logic [3:0] aluCntrlD,aluCntrlDsv;
+  logic [2:0] aluCntrlD,aluCntrlDsv;
+  logic useF7D,useF7Dsv;
   logic [2:0] immCntrlD;
 
   //EXECUTE STAGE
@@ -40,6 +43,7 @@ module core(
   logic [31:0] pcE,immExtE,pcTargetE,pcEplus4;
   logic [31:0] pcEplus4sv;
   logic branchFlagE,pcSelE;
+  logic [31:0] pcPlusImm;
 
   logic regWriteE,memWriteE,branchE,jumpE,aluSrcBE,invE;
   logic regWriteEsv,memWriteEsv;
@@ -47,12 +51,18 @@ module core(
   logic [4:0] rdE,r1AddrE,r2AddrE;
   logic [31:0] rs2Esv;
   logic [4:0] rdEsv;
-  logic [3:0] aluCntrlE;
-  logic aluSrcAE;
+  logic [2:0] aluCntrlE;
+  logic useF7E;
+  logic [1:0] aluSrcAE;
+  logic pcTargetSrcE;
   logic [1:0] regSrcE;
   logic [1:0] regSrcEsv;
   logic [1:0] fwdAE;
   logic [1:0] fwdBE;
+
+  localparam [1:0]
+             RS1 = 2'b0,
+             PC = 2'b1;
 
   //MEMORY STAGE
   logic [31:0] aluResultM,aluResultMsv;
@@ -112,6 +122,8 @@ module core(
   assign regSrcE = regSrcDsv;
   assign invE = invDsv;
   assign aluCntrlE = aluCntrlDsv;
+  assign useF7E = useF7Dsv;
+  assign pcTargetSrcE = pcTargetSrcDsv;
 
 
   //HAZARD MUX
@@ -124,7 +136,6 @@ module core(
         rs1hzE = aluResultM; //Mem fwd
       2'b01:
         rs1hzE = resultW; //Write Back fwd
-
       default:
         rs1hzE = rs1E; //No fwd
     endcase
@@ -142,10 +153,22 @@ module core(
         rs2hzE = rs2E; //No fwd
     endcase
   end
-  assign srcAE = aluSrcAE?pcE:rs1hzE;
-  assign srcBE = aluSrcBE?immExtE:rs2hzE;
+  always_comb
+  begin
+    case(aluSrcAE)
+      RS1:
+        srcAE = rs1hzE;
+      PC:
+        srcAE = pcE;
+      default:
+        srcAE = 0;
+    endcase
 
-  assign pcTargetE = immExtE + pcE;
+  end
+  assign srcBE = aluSrcBE?immExtE:rs2hzE;
+  assign pcPlusImm = immExtE + pcE;
+
+  assign pcTargetE = pcTargetSrcE ? aluResultE : (pcPlusImm);
   assign pcSelE = (branchE&branchFlagE) ^ jumpE;
 
   //HAZARD SIGNALS
@@ -193,9 +216,11 @@ module core(
                 .branch(branchD),
                 .jump(jumpD),
                 .aluCntrl(aluCntrlD),
+                .useF7(useF7D),
                 .immCntrl(immCntrlD),
                 .aluSrcB(aluSrcBD),
                 .aluSrcA(aluSrcAD),
+                .pcTargetSrc(pcTargetSrcD),
                 .regSrc(regSrcD),
                 .inv(invD)
               );
@@ -216,6 +241,7 @@ module core(
                );
   alu alu (
         .aluCntrl(aluCntrlE),
+        .useF7(useF7E),
         .inv(invE),
         .srcA(srcAE),
         .srcB(srcBE),
@@ -243,81 +269,131 @@ module core(
              );
   always_ff@(posedge clk)
   begin
-    if (!stallF)
-    begin : PC
-      pcF <= pcF_;
-    end
-    if (!stallD)
-    begin : fetchReg
-      pcFsv <= pcF;
-      pcFplus4sv <= pcFplus4;
-      instrFsv <= imemRdata;
-    end
-    if (flushD)
+    if (rst)
     begin
-      pcFsv <= 0;
-      pcFplus4sv <= 0;
-      instrFsv <= 0;
-    end
-    if (flushE)
-    begin : decodeReg
-      rs1Dsv <= 0;
-      rs2Dsv <= 0;
-      r1AddrDsv <= 0;
-      r2AddrDsv <= 0;
-      rdDsv <= 0;
-      pcDplus4sv <= 0;
-      pcDsv <= 0;
-      immExtDsv <= 0;
+      pcF <= 0;
+      pcFsv         <= 0;
+      pcFplus4sv    <= 0;
+      instrFsv      <= 0;
 
-      aluCntrlDsv <= 0;
-      invDsv <= 0;
-      regWriteDsv<= 0;
-      memWriteDsv<= 0;
-      branchDsv<= 0;
-      jumpDsv <= 0;
-      aluSrcBDsv <= 0;
-      aluSrcADsv <= 0;
-      regSrcDsv <= 0;
+      rs1Dsv        <= 0;
+      rs2Dsv        <= 0;
+      r1AddrDsv     <= 0;
+      r2AddrDsv     <= 0;
+      rdDsv         <= 0;
+      pcDplus4sv    <= 0;
+      pcDsv         <= 0;
+      immExtDsv     <= 0;
+      aluCntrlDsv   <= 0;
+      useF7Dsv        <= 0;
+      invDsv        <= 0;
+      regWriteDsv   <= 0;
+      memWriteDsv   <= 0;
+      branchDsv     <= 0;
+      jumpDsv       <= 0;
+      aluSrcBDsv    <= 0;
+      aluSrcADsv    <= 0;
+      pcTargetSrcDsv<= 0;
+      regSrcDsv     <= 0;
+
+      aluResultEsv  <= 0;
+      rs2Esv        <= 0;
+      rdEsv         <= 0;
+      pcEplus4sv    <= 0;
+      regWriteEsv   <= 0;
+      regSrcEsv     <= 0;
+      memWriteEsv   <= 0;
+
+      dmemRdataMsv  <= 0;
+      rdMsv         <= 0;
+      pcMplus4sv    <= 0;
+      regWriteMsv   <= 0;
+      aluResultMsv  <= 0;
+      regSrcMsv     <= 0;
     end
     else
     begin
-      rs1Dsv <= rs1D;
-      rs2Dsv <= rs2D;
-      r1AddrDsv <= r1AddrD;
-      r2AddrDsv <= r2AddrD;
-      rdDsv <= rdD;
-      pcDplus4sv <= pcDplus4;
-      pcDsv <= pcD;
-      immExtDsv <= immExtD;
+      if (!stallF)
+      begin : PCreg
+        pcF <= pcF_;
+      end
+      if (!stallD)
+      begin : fetchReg
+        pcFsv <= pcF;
+        pcFplus4sv <= pcFplus4;
+        instrFsv <= imemRdata;
+      end
+      if (flushD)
+      begin
+        pcFsv <= 0;
+        pcFplus4sv <= 0;
+        instrFsv <= 0;
+      end
+      if (flushE)
+      begin : decodeReg
+        rs1Dsv <= 0;
+        rs2Dsv <= 0;
+        r1AddrDsv <= 0;
+        r2AddrDsv <= 0;
+        rdDsv <= 0;
+        pcDplus4sv <= 0;
+        pcDsv <= 0;
+        immExtDsv <= 0;
 
-      aluCntrlDsv <= aluCntrlD;
-      invDsv <=invD;
-      regWriteDsv<= regWriteD;
-      memWriteDsv<= memWriteD;
-      branchDsv<= branchD;
-      jumpDsv <= jumpD;
-      aluSrcBDsv <= aluSrcBD;
-      aluSrcADsv <= aluSrcAD;
-      regSrcDsv <= regSrcD;
+        aluCntrlDsv <= 0;
+        useF7Dsv    <= 0;
+        invDsv <= 0;
+        regWriteDsv<= 0;
+        memWriteDsv<= 0;
+        branchDsv<= 0;
+        jumpDsv <= 0;
+        aluSrcBDsv <= 0;
+        aluSrcADsv <= 0;
+        pcTargetSrcDsv <= 0;
+        regSrcDsv <= 0;
+      end
+      else
+      begin
+        rs1Dsv <= rs1D;
+        rs2Dsv <= rs2D;
+        r1AddrDsv <= r1AddrD;
+        r2AddrDsv <= r2AddrD;
+        rdDsv <= rdD;
+        pcDplus4sv <= pcDplus4;
+        pcDsv <= pcD;
+        immExtDsv <= immExtD;
+
+        aluCntrlDsv <= aluCntrlD;
+        useF7Dsv <= useF7D;
+        invDsv <=invD;
+        regWriteDsv<= regWriteD;
+        memWriteDsv<= memWriteD;
+        branchDsv<= branchD;
+        jumpDsv <= jumpD;
+        aluSrcBDsv <= aluSrcBD;
+        aluSrcADsv <= aluSrcAD;
+        pcTargetSrcDsv <= pcTargetSrcD;
+        regSrcDsv <= regSrcD;
+      end
+
+      begin : executeReg
+        aluResultEsv <=aluResultE;
+        rs2Esv <= rs2E;
+        rdEsv <= rdE;
+        pcEplus4sv <=pcEplus4;
+        regWriteEsv <= regWriteE;
+        regSrcEsv <= regSrcE;
+        memWriteEsv <= memWriteE;
+      end
+      begin : memoryReg
+        dmemRdataMsv <= dmemRdata;
+        rdMsv <= rdM;
+        pcMplus4sv<=pcMplus4;
+        regWriteMsv <= regWriteM;
+        aluResultMsv <= aluResultM;
+        regSrcMsv <= regSrcM;
+      end
     end
 
-    begin : executeReg
-      aluResultEsv <=aluResultE;
-      rs2Esv <= rs2E;
-      rdEsv <= rdE;
-      pcEplus4sv <=pcEplus4;
-      regWriteEsv <= regWriteE;
-      regSrcEsv <= regSrcE;
-      memWriteEsv <= memWriteE;
-    end
-    begin : memoryReg
-      dmemRdataMsv <= dmemRdata;
-      rdMsv <= rdM;
-      pcMplus4sv<=pcMplus4;
-      regWriteMsv <= regWriteM;
-      aluResultMsv <= aluResultM;
-      regSrcMsv <= regSrcM;
-    end
   end
 endmodule
