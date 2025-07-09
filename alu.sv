@@ -1,5 +1,6 @@
 `timescale 1ns/1ps
-module alu(input logic [3:0] aluCntrl,
+module alu(input logic [2:0] aluCntrl,
+             input logic useF7,
              input logic inv,
              input logic [31:0] srcA,
              input logic [31:0] srcB,
@@ -10,43 +11,52 @@ module alu(input logic [3:0] aluCntrl,
   logic [4:0] srcBlwr;
   assign srcBlwr = srcB[4:0];
 
+
   always_comb
   begin
-    branchFlag = 0;
     zero = 0;
+    branchFlag = 0;
     case (aluCntrl)
-      4'b0000:
-        aluResult =  (srcA + srcB);
-      4'b1000:
+      3'b000:
       begin
-        aluResult = (srcA - srcB);
-        zero = ~(|aluResult);
-        branchFlag = inv?~zero:zero;
+        if (useF7)
+        begin
+          aluResult = ($signed(srcA) - $signed(srcB));
+          zero = ~(|aluResult);
+          branchFlag = inv?~zero:zero;
+        end
+        else
+        begin
+          aluResult =  ($signed(srcA) + $signed(srcB));
+        end
       end
-      4'b0001:
+      3'b001:
         aluResult = srcA << srcBlwr;
-      4'b0010:
+      3'b010:
       begin
         aluResult = ($signed(srcA) < $signed(srcB))? {31'b0,1'b1} : 0;
         branchFlag = inv?~aluResult[0]:aluResult[0];
       end
-      4'b0011:
+      3'b011:
       begin
         aluResult = ((srcA) < (srcB))? {31'b0,1'b1} : 0;
         branchFlag = inv?~aluResult[0]:aluResult[0];
       end
-      4'b0100:
+      3'b100:
         aluResult = srcA ^ srcB;
-      4'b0101:
-        aluResult = srcA >> srcBlwr;
-      4'b1101:
-        aluResult = $signed(srcA) >>> srcBlwr;
-      4'b0110:
+      3'b101:
+        if (useF7)
+        begin
+          aluResult = $signed(srcA) >>> srcBlwr;
+        end
+        else
+        begin
+          aluResult = srcA >> srcBlwr;
+        end
+      3'b110:
         aluResult = srcA | srcB;
-      4'b0111:
+      3'b111:
         aluResult = srcA & srcB;
-      4'b1111:
-        aluResult = srcB;
       default:
       begin
         aluResult = 0;
