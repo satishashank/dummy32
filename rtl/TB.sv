@@ -10,6 +10,7 @@ module TB;
   logic [31:0] imemAddr;
   logic [31:0] dmemRdata;
   logic [31:0] dmemWdata;
+  logic [2:0] dmemSize;
   logic dmemWen;
   logic [31:0] dmemAddr;
 
@@ -23,12 +24,22 @@ module TB;
          .imemAddr(imemAddr),
          .dmemRdata(dmemRdata),
          .dmemWdata(dmemWdata),
+         .dmemSize(dmemSize),
          .dmemWen(dmemWen),
          .dmemAddr(dmemAddr)
        );
   imem instr (
+         .clk(clk),
          .rAddr(imemAddr),
          .rData(imemRdata)
+       );
+  dmem data(
+         .wData(dmemWdata),
+         .rData(dmemRdata),
+         .clk(clk),
+         .wEn(dmemWen),
+         .addr(dmemAddr),
+         .size(dmemSize)
        );
 
   initial

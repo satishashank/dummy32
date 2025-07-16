@@ -14,13 +14,14 @@ module controlUnit (
     output logic inv,
     output logic useF7,
     output logic [1:0] regSrc,
-    output logic pcTargetSrc
+    output logic pcTargetSrc,
+    output logic loadStore
   );
 
   localparam [4:0]
              OPCODE_RTYPE  = 5'b01100,
              OPCODE_IARTHTYPE  = 5'b00100,
-             OPCODE_ILOADTYPE  = 5'b00000,
+             OPCODE_LOADTYPE  = 5'b00000,
              OPCODE_STYPE  = 5'b01000,
              OPCODE_BTYPE = 5'b11000,
              OPCODE_AUIPC =  5'b00101,
@@ -53,6 +54,7 @@ module controlUnit (
   begin
     regSrc = ALU_SRC;
     useF7 = 0;
+    loadStore = 0;
     case (op)
       OPCODE_RTYPE,OPCODE_IARTHTYPE :
       begin // R-type/I-type arith
@@ -69,7 +71,8 @@ module controlUnit (
       end
       OPCODE_STYPE :
       begin // S-type
-        aluCntrl = 3'b0;
+        aluCntrl = funct3;
+        loadStore = 1;
         inv = 0;
         useF7 = 0;
         regWrite = 0;
@@ -91,9 +94,10 @@ module controlUnit (
         inv = funct3[0];
         aluSrcA = RS1;
       end
-      OPCODE_ILOADTYPE:
-      begin // (I)L-type/U-type
-        aluCntrl = 3'b0;
+      OPCODE_LOADTYPE:
+      begin // (I)L-type
+        aluCntrl = funct3;
+        loadStore = 1;
         regWrite = 1;
         memWrite = 0;
         branch = 0;
@@ -112,7 +116,7 @@ module controlUnit (
         jump = 0;
         immCntrl = IMM_TYPE_U;
         inv = 0;
-        regSrc = MEM_SRC;
+        regSrc = ALU_SRC;
         aluSrcA = ZERO;
       end
       OPCODE_AUIPC:
@@ -150,6 +154,7 @@ module controlUnit (
         immCntrl = 0;
         inv = 0;
         aluSrcA = RS1;
+        loadStore = 0;
       end
     endcase
   end
