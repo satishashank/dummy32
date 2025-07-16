@@ -47,7 +47,7 @@ async def isa_test(dut):
         dut.rst.value = 1
         await Timer(1, "ns")
     dut.rst.value = 0
-    for i in range(15):
+    for i in range(200):
         await Timer(1, "ns")
         if (dut.uut.regF.writeEn.value == 1):
             try:
