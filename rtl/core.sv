@@ -13,6 +13,9 @@ module core(
 
   //FETCH STAGE
   logic [31:0] pcF,pcFplus4,pcFsv,pcFplus4sv,instrFsv,pcF_;
+  logic doesBranchF,doesBranchFsv;
+  logic [31:0] btbTargetF;
+
 
   //DECODE STAGE
   logic [31:0] instrD;
@@ -35,6 +38,7 @@ module core(
   logic [2:0] aluCntrlD,aluCntrlDsv;
   logic useF7D,useF7Dsv;
   logic [2:0] immCntrlD;
+  logic doesBranchD,doesBranchDsv;
 
   //EXECUTE STAGE
   logic [31:0] srcAE;
@@ -62,6 +66,10 @@ module core(
   logic [1:0] regSrcEsv;
   logic [1:0] fwdAE;
   logic [1:0] fwdBE;
+  logic btbUpdateE;
+  logic doesBranchE;
+  logic [31:0] btbTargetE;
+  logic wrongBranchE;
 
   localparam [1:0]
              RS1 = 2'b0,
@@ -94,9 +102,21 @@ module core(
   logic regWriteW;
 
   //FETCH STAGE
-  assign pcF_ = pcSelE?pcTargetE:pcFplus4;
+  // assign pcF_ = pcSelE?pcTargetE:pcFplus4;
+  always_comb
+  begin
+    case ({wrongBranchE,doesBranchF})
+      2'b10,2'b11:
+        pcF_ = pcTargetE;
+      2'b01:
+        pcF_ = btbTargetF;
+      default:
+        pcF_ = pcFplus4;
+    endcase
+
+  end
   assign pcFplus4 = pcF + 4;
-  assign imemAddr = pcF; //edit
+  assign imemAddr = pcF;
 
   //DECODE STAGE
   assign instrD = instrFsv;
@@ -105,6 +125,7 @@ module core(
   assign rdD = instrD[11:7];
   assign r1AddrD = instrD[19:15];
   assign r2AddrD = instrD[24:20];
+  assign doesBranchD = doesBranchFsv;
 
   //EXECUTE STAGE
   assign rs1E = rs1Dsv;
@@ -129,6 +150,7 @@ module core(
   assign aluCntrlE = aluCntrlDsv;
   assign useF7E = useF7Dsv;
   assign pcTargetSrcE = pcTargetSrcDsv;
+  assign doesBranchE = doesBranchDsv;
 
 
   //HAZARD MUX
@@ -172,9 +194,13 @@ module core(
   end
   assign srcBE = aluSrcBE?immExtE:rs2hzE;
   assign pcPlusImm = immExtE + pcE;
+  assign btbTargetE = pcPlusImm;
 
-  assign pcTargetE = pcTargetSrcE ? aluResultE : (pcPlusImm);
+  assign pcTargetE = (~pcSelE&doesBranchE)?pcEplus4:(pcTargetSrcE ? aluResultE : (pcPlusImm));
   assign pcSelE = (branchE&branchFlagE) ^ jumpE;
+  assign btbUpdateE = (~pcTargetSrcE)&(branchE|jumpE); //saving the branch without depending on rs1
+  assign wrongBranchE = pcSelE^doesBranchE; //flush when pcSelE is there xor doesBranchs
+
 
   //HAZARD SIGNALS
   logic stallF,stallD,flushE,flushD;
@@ -273,8 +299,19 @@ module core(
                .r2AddrD(r2AddrD),
                .rdE(rdE),
                .regSrcE0(regSrcE[0]),
-               .pcSelE(pcSelE)
+               .wrongBranchE(wrongBranchE)
              );
+  branchPredictor bPredictor(
+                    .clk(clk),
+                    .rst(rst),
+                    .fetchPc(pcF),
+                    .fetchHit(doesBranchF),
+                    .fetchTarget(btbTargetF),
+                    .exPc(pcE),
+                    .exTaken(pcSelE),
+                    .exBranch(btbUpdateE),
+                    .exTarget(btbTargetE)
+                  );
   always_ff@(posedge clk)
   begin
     if (rst)
@@ -283,6 +320,7 @@ module core(
       pcFsv         <= 0;
       pcFplus4sv    <= 0;
       instrFsv      <= 0;
+      doesBranchFsv     <= 0;
 
       rs1Dsv        <= 0;
       rs2Dsv        <= 0;
@@ -293,7 +331,7 @@ module core(
       pcDsv         <= 0;
       immExtDsv     <= 0;
       aluCntrlDsv   <= 0;
-      useF7Dsv        <= 0;
+      useF7Dsv      <= 0;
       invDsv        <= 0;
       regWriteDsv   <= 0;
       loadStoreDsv  <= 0;
@@ -304,6 +342,7 @@ module core(
       aluSrcADsv    <= 0;
       pcTargetSrcDsv<= 0;
       regSrcDsv     <= 0;
+      doesBranchDsv     <= 0;
 
       aluResultEsv      <= 0;
       rs2Esv            <= 0;
@@ -332,12 +371,14 @@ module core(
         pcFsv <= pcF;
         pcFplus4sv <= pcFplus4;
         instrFsv <= imemRdata;
+        doesBranchFsv <= doesBranchF;
       end
       if (flushD)
       begin
         pcFsv <= 0;
         pcFplus4sv <= 0;
         instrFsv <= 0;
+        doesBranchFsv <= 0;
       end
       if (flushE)
       begin : decodeReg
@@ -362,6 +403,7 @@ module core(
         pcTargetSrcDsv <= 0;
         loadStoreDsv <= 0;
         regSrcDsv <= 0;
+        doesBranchDsv <= 0;
       end
       else
       begin
@@ -386,6 +428,7 @@ module core(
         pcTargetSrcDsv <= pcTargetSrcD;
         loadStoreDsv <= loadStoreD;
         regSrcDsv <= regSrcD;
+        doesBranchDsv <= doesBranchD;
       end
       begin : executeReg
         aluResultEsv <=aluResultE;

@@ -1,6 +1,4 @@
-a.out
 __pycache__
+ideas.txt
+code.*
 sim_build
-alu.v
-femto.v
-results.xml

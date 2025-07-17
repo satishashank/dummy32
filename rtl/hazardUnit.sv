@@ -14,14 +14,13 @@ module hazardUnit(output logic [1:0] fwdAE,
                     input logic regWriteM,
                     input logic regWriteW,
                     input logic regSrcE0,
-                    input logic pcSelE
+                    input logic wrongBranchE
                    );
   logic r1EqMem,r2EqMem,r1EqW,r2EqW;
   logic lwStall;
-
   assign stallD = lwStall;
-  assign flushE = lwStall|pcSelE;
-  assign flushD = pcSelE;
+  assign flushE = lwStall|wrongBranchE;
+  assign flushD = wrongBranchE;
   assign stallF = lwStall;
   assign lwStall = regSrcE0&((r1AddrD==rdE)|(r2AddrD==rdE))&&(rdE!=0);
   assign r1EqMem = (r1AddrE == rdM)&&(rdM != 0);
