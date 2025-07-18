@@ -1,4 +1,8 @@
-module branchPredictor (
+module branchPredictor#(
+    parameter int BTB_ENTRIES = 64,
+    parameter int INDEX_WIDTH = $clog2(BTB_ENTRIES),
+    parameter int TAG_WIDTH = 32 - INDEX_WIDTH
+  ) (
     input  logic         clk,
     input  logic         rst,
 
@@ -17,16 +21,16 @@ module branchPredictor (
 
   typedef struct packed {
             logic valid;
-            logic [24:0] tag;
+            logic [TAG_WIDTH-1:0] tag;
             logic [31:0] target;
             logic [1:0] counter;
           } btb_entry_t;
 
-  btb_entry_t btb_mem [31:0];
-  logic [4:0] fetchIndex;
-  logic [24:0]   fetchTag;
-  logic [4:0] exIndex;
-  logic [24:0]   exTag;
+  btb_entry_t btb_mem [BTB_ENTRIES-1:0];
+  logic [INDEX_WIDTH-1:0] fetchIndex;
+  logic [TAG_WIDTH-1:0]   fetchTag;
+  logic [INDEX_WIDTH-1:0] exIndex;
+  logic [TAG_WIDTH-1:0]   exTag;
   logic exHit;
 
   logic [1:0] nextCount,count;
@@ -37,10 +41,10 @@ module branchPredictor (
              sTaken = 2'b11;
 
 
-  assign exIndex = exPc[6:2];
-  assign exTag  = exPc[31:7];
-  assign fetchIndex = fetchPc[6:2];
-  assign fetchTag  = fetchPc[31:7];
+  assign exIndex = exPc[INDEX_WIDTH+1:2];
+  assign exTag  = exPc[31:INDEX_WIDTH];
+  assign fetchIndex = fetchPc[INDEX_WIDTH+1:2];
+  assign fetchTag  = fetchPc[31:INDEX_WIDTH];
 
   assign fetchHit = (btb_mem[fetchIndex].valid && (btb_mem[fetchIndex].tag == fetchTag))&&btb_mem[fetchIndex].counter[1];
   assign fetchTarget = btb_mem[fetchIndex].target;
