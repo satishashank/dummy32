@@ -13,7 +13,7 @@ module core(
 
   //FETCH STAGE
   logic [31:0] pcF,pcFplus4,pcFsv,pcFplus4sv,instrFsv,pcF_;
-  logic doesBranchF,doesBranchFsv;
+  logic bPredictTakenF,bPredictTakenFsv;
   logic [31:0] btbTargetF;
 
 
@@ -38,7 +38,7 @@ module core(
   logic [2:0] aluCntrlD,aluCntrlDsv;
   logic useF7D,useF7Dsv;
   logic [2:0] immCntrlD;
-  logic doesBranchD,doesBranchDsv;
+  logic bPredictTakenD,bPredictTakenDsv;
 
   //EXECUTE STAGE
   logic [31:0] srcAE;
@@ -67,7 +67,7 @@ module core(
   logic [1:0] fwdAE;
   logic [1:0] fwdBE;
   logic btbUpdateE;
-  logic doesBranchE;
+  logic bPredictTakenE;
   logic [31:0] btbTargetE;
   logic wrongBranchE;
 
@@ -105,7 +105,7 @@ module core(
   // assign pcF_ = pcSelE?pcTargetE:pcFplus4;
   always_comb
   begin
-    case ({wrongBranchE,doesBranchF})
+    case ({wrongBranchE,bPredictTakenF})
       2'b10,2'b11:
         pcF_ = pcTargetE;
       2'b01:
@@ -125,7 +125,7 @@ module core(
   assign rdD = instrD[11:7];
   assign r1AddrD = instrD[19:15];
   assign r2AddrD = instrD[24:20];
-  assign doesBranchD = doesBranchFsv;
+  assign bPredictTakenD = bPredictTakenFsv;
 
   //EXECUTE STAGE
   assign rs1E = rs1Dsv;
@@ -150,7 +150,7 @@ module core(
   assign aluCntrlE = aluCntrlDsv;
   assign useF7E = useF7Dsv;
   assign pcTargetSrcE = pcTargetSrcDsv;
-  assign doesBranchE = doesBranchDsv;
+  assign bPredictTakenE = bPredictTakenDsv;
 
 
   //HAZARD MUX
@@ -196,10 +196,10 @@ module core(
   assign pcPlusImm = immExtE + pcE;
   assign btbTargetE = pcPlusImm;
 
-  assign pcTargetE = (~pcSelE&doesBranchE)?pcEplus4:(pcTargetSrcE ? aluResultE : (pcPlusImm));
+  assign pcTargetE = (~pcSelE&bPredictTakenE)?pcEplus4:(pcTargetSrcE ? aluResultE : (pcPlusImm));
   assign pcSelE = (branchE&branchFlagE) ^ jumpE;
   assign btbUpdateE = (~pcTargetSrcE)&(branchE|jumpE); //saving the branch without depending on rs1
-  assign wrongBranchE = pcSelE^doesBranchE; //flush when pcSelE is there xor doesBranchs
+  assign wrongBranchE = pcSelE^bPredictTakenE; //flush when pcSelE is there xor bPredictTakens
 
 
   //HAZARD SIGNALS
@@ -305,7 +305,7 @@ module core(
                     .clk(clk),
                     .rst(rst),
                     .fetchPc(pcF),
-                    .fetchHit(doesBranchF),
+                    .fetchHit(bPredictTakenF),
                     .fetchTarget(btbTargetF),
                     .exPc(pcE),
                     .exTaken(pcSelE),
@@ -320,7 +320,7 @@ module core(
       pcFsv         <= 0;
       pcFplus4sv    <= 0;
       instrFsv      <= 0;
-      doesBranchFsv     <= 0;
+      bPredictTakenFsv     <= 0;
 
       rs1Dsv        <= 0;
       rs2Dsv        <= 0;
@@ -342,7 +342,7 @@ module core(
       aluSrcADsv    <= 0;
       pcTargetSrcDsv<= 0;
       regSrcDsv     <= 0;
-      doesBranchDsv     <= 0;
+      bPredictTakenDsv     <= 0;
 
       aluResultEsv      <= 0;
       rs2Esv            <= 0;
@@ -371,14 +371,14 @@ module core(
         pcFsv <= pcF;
         pcFplus4sv <= pcFplus4;
         instrFsv <= imemRdata;
-        doesBranchFsv <= doesBranchF;
+        bPredictTakenFsv <= bPredictTakenF;
       end
       if (flushD)
       begin
         pcFsv <= 0;
         pcFplus4sv <= 0;
         instrFsv <= 0;
-        doesBranchFsv <= 0;
+        bPredictTakenFsv <= 0;
       end
       if (flushE)
       begin : decodeReg
@@ -403,7 +403,7 @@ module core(
         pcTargetSrcDsv <= 0;
         loadStoreDsv <= 0;
         regSrcDsv <= 0;
-        doesBranchDsv <= 0;
+        bPredictTakenDsv <= 0;
       end
       else
       begin
@@ -428,7 +428,7 @@ module core(
         pcTargetSrcDsv <= pcTargetSrcD;
         loadStoreDsv <= loadStoreD;
         regSrcDsv <= regSrcD;
-        doesBranchDsv <= doesBranchD;
+        bPredictTakenDsv <= bPredictTakenD;
       end
       begin : executeReg
         aluResultEsv <=aluResultE;
