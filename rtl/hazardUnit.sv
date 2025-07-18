@@ -18,6 +18,11 @@ module hazardUnit(output logic [1:0] fwdAE,
                    );
   logic r1EqMem,r2EqMem,r1EqW,r2EqW;
   logic lwStall;
+  localparam [1:0]
+             NO_FWD = 2'b00,
+             MEM_FWD = 2'b10,
+             WB_FWD = 2'b01
+             ;
   assign stallD = lwStall;
   assign flushE = lwStall|wrongBranchE;
   assign flushD = wrongBranchE;
@@ -31,30 +36,30 @@ module hazardUnit(output logic [1:0] fwdAE,
   begin
     if (r1EqMem&regWriteM)
     begin
-      fwdAE = 2'b10;
+      fwdAE = MEM_FWD;
     end
     else if (r1EqW&regWriteW)
     begin
-      fwdAE = 2'b01;
+      fwdAE = WB_FWD;
     end
     else
     begin
-      fwdAE = 2'b00;
+      fwdAE = NO_FWD;
     end
   end
   always_comb
   begin
     if (r2EqMem&regWriteM)
     begin
-      fwdBE = 2'b10;
+      fwdBE = MEM_FWD;
     end
-    else if (r2EqW&regWriteM)
+    else if (r2EqW&regWriteW)
     begin
-      fwdBE = 2'b01;
+      fwdBE = WB_FWD;
     end
     else
     begin
-      fwdBE = 2'b00;
+      fwdBE = NO_FWD;
     end
   end
 endmodule
