@@ -10,7 +10,7 @@ However, the `Vivado Suite` was used for final linting and synthesizability.
 
 The C file is compiled using the standard [riscv-gnu-toolchain](https://github.com/riscv-collab/riscv-gnu-toolchain) with a primitive linking script. The generated `elf` is converted to `code.mem` using SiFive's [elf2hex](https://github.com/sifive/elf2hex).
 
-## Simulating and executing C on the core
+## Simulation and executing C on the core
 As mentioned, a combination of `Verilator` and `CoCoTB` is used for simulation, debugging, and logging. The core copies the generated `code.mem` to the instruction memory for execution, and the `Makefile` streamlines this process.
 
 To compile C, run:
