@@ -22,7 +22,7 @@ To compile C, and generating .mem files for verilog run:
 This command compiles the `test.c` file along with a basic startup file `boot.s` using the linker script.
 `boot.s` initializes the stack pointer `sp` (or `x2`) and calls `main`.
 
-Simulation, along with generating the hex dump for the instruction memory, can be run using:
+Simulation, along with generating the hex dump for the memories, can be run using:
 
     make
 
