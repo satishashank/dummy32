@@ -13,6 +13,13 @@ module TB;
   logic [2:0] dmemSize;
   logic dmemWen;
   logic [31:0] dmemAddr;
+  logic uartWen;
+  logic [7:0] uartData;
+
+  assign uartData = dmemWdata[7:0];
+  assign uartWen = dmemWen&(dmemAddr == 32'hFFFF_FFFC);
+
+
 
 
 
@@ -41,6 +48,12 @@ module TB;
          .addr(dmemAddr),
          .size(dmemSize)
        );
+  simUart uart(
+            .clk(clk),
+            .rst(rst),
+            .data(uartData),
+            .wEn(uartWen)
+          );
 
   initial
   begin
