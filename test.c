@@ -16,7 +16,6 @@ void uart_puthex(unsigned int val)
 {
     uart_puts("0x");
 
-    // Start from most significant nibble (shift = 28 bits)
     int shift = 28;
     for (int i = 0; i < 8; i++)
     {
@@ -38,18 +37,22 @@ int looper(int var)
     a = 0;
     d = 0;
     b = 0;
-    while (d < 4)
+    while (d < 5)
     {
-        d++;
-        for (a = 0; a < 5; a++)
+        if (d >= 1)
+        {
+            break;
+        }
+        for (a = 0; a < 7; a++)
         {
             b = 0;
-            while (b < 3)
+            while (b < 2)
             {
                 var -= 0x1; // decrement each time
                 b++;
             }
         }
+        d++;
     }
     return var;
 }
@@ -57,9 +60,10 @@ int main()
 {
     int a, b;
     uart_puts("Hello World ,from dummy!\n");
-    a = 0xBEEFCAFE;
+    a = 0xDEADCAFE;
     uart_putsi("Data initial value:", a);
     b = looper(a);
     uart_putsi("Data final value:", b);
+    uart_putsi("Data Correct value:", (a - 14));
     return 0;
 }
