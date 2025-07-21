@@ -59,8 +59,8 @@ int looper(int var)
 int main()
 {
     int a, b;
-    uart_puts("Hello World ,from dummy!\n");
-    a = 0xDEADCAFE;
+    uart_puts("Hello World, from dummy!\n");
+    a = 0xE110CAFE;
     uart_putsi("Data initial value:", a);
     b = looper(a);
     uart_putsi("Data final value:", b);

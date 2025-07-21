@@ -2,9 +2,16 @@
 .global _start
 
 _start:
-    li sp, 0x10001000
+    li sp, 0x10000FFC
     call main
-halt:
+HALT:
+    li t0,0xDEADC0DE
     nop
-    li x1,0xA5FFA5FF
-    j halt
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    j HALT
