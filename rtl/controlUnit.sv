@@ -59,7 +59,7 @@ module controlUnit (
       OPCODE_RTYPE,OPCODE_IARTHTYPE :
       begin // R-type/I-type arith
         aluCntrl = funct3;
-        useF7 = op[3]&funct7_6;
+        useF7 = op[3]?funct7_6:((funct3[0])&&(funct3[2])&&(~funct3[1])&&funct7_6);
         inv = 0;
         regWrite = 1;
         memWrite = 0;
@@ -138,7 +138,7 @@ module controlUnit (
         memWrite = 0;
         branch = 0;
         jump = 1;
-        immCntrl = IMM_TYPE_J;
+        immCntrl = op[1]?IMM_TYPE_J:IMM_TYPE_I;
         inv = 0;
         regSrc = PC_SRC;
         aluSrcA = RS1;
