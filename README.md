@@ -1,7 +1,3 @@
-Sure! Here's a more concise and polished version of that README section:
-
----
-
 # dummy32
 
 A 5-stage pipelined RV32I core started as a block diagram from *"Digital Design & Computer Architecture: RISC-V Edition"*, enhanced with full RV32I support and dynamic branch prediction.
