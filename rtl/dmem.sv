@@ -12,7 +12,7 @@ module dmem (
   logic [31:0] addrplus3;
   logic [31:0] addrMinusOff;
 
-  assign addrMinusOff = {1'b0,addr[30:0]};
+  assign addrMinusOff = {4'b0,addr[27:0]};
   assign addrplus1 = addrMinusOff + 1;
   assign addrplus2 = addrMinusOff + 2;
   assign addrplus3 = addrMinusOff + 3;
@@ -46,15 +46,15 @@ module dmem (
   begin
     case (size)
       3'b000:
-        rData = {24'b0,mem[addrMinusOff]};
+        rData = {{24{mem[addr][7]}},mem[addrMinusOff]};
       3'b001:
-        rData = {16'b0,mem[addrplus1],mem[addrMinusOff]};
+        rData = {{16{mem[addrplus1][7]}},mem[addrplus1],mem[addrMinusOff]};
       3'b010:
         rData = {mem[addrplus3],mem[addrplus2],mem[addrplus1],mem[addrMinusOff]};
       3'b100:
-        rData = {{24{mem[addr][7]}},mem[addrMinusOff]};
+        rData = {24'b0,mem[addrMinusOff]};
       3'b101:
-        rData = {{16{mem[addr][7]}},mem[addrplus1],mem[addrMinusOff]};
+        rData = {16'b0,mem[addrplus1],mem[addrMinusOff]};
       default :
         rData =32'hDEADC0DE;
     endcase
