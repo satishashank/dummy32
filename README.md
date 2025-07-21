@@ -8,7 +8,7 @@ A 5-stage pipelined RV32I core started as a block diagram from *"Digital Design 
 
 ## Features
 
-* Passes all [riscv-tests](https://github.com/riscv/riscv-tests)
+* Passes all [riscv-tests](https://github.com/riscv/riscv-tests) for RV32I
 * Dynamic branch prediction using a Branch Target Buffer (BTB) with 2-bit saturating counters
 * Hazard handling with register forwarding and pipeline stalls
 
