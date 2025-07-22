@@ -13,9 +13,13 @@ A 5-stage pipelined RV32I core started as a block diagram from *"Digital Design 
 * Branch predictor can be turned off in the testbench for before and after
 
 * Hazard handling with register forwarding and pipeline stalls
+
   
 Changes in throughput with different buffer sizes on `benchmarck-dhrystone` with `500` iterations with "always-taken" as base:
-<img width="808" height="610" alt="image" src="https://github.com/user-attachments/assets/84cbd2d5-6a7a-437f-892e-b8ba6ff671fd" />
+<p align="center">
+<img width="404" height="305" alt="image" src="https://github.com/user-attachments/assets/84cbd2d5-6a7a-437f-892e-b8ba6ff671fd" />
+</p>
+
 
 
 
