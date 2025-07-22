@@ -5,9 +5,16 @@ Ported from sifive's [benchmark-dhrystone](https://github.com/sifive/benchmark-d
 
 ## Results
 
-Iterations: 2000
+Iterations: 500
 
-* Cycles:738001 | Branch prediction: off
-* Cycles:698025 | BTB based branch prediction: on
+* btb off       |   Cycles:0x0003827D
 
-BTB based prediction makes the core 5.41% faster
+* btb 16 entry  |    Cycles:0x000372E1
+
+* btb 32 entry | Cycles:0x00035797
+
+* btb 128 entry | Cycles:0x00034FCB
+
+* btb 256 entry | Cycles:0x0003309B
+
+* btb 512 entry | Cycles:0x000324E9
