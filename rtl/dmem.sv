@@ -1,4 +1,6 @@
-module dmem (
+module dmem #(
+    parameter DEPTH = 16384 //16K
+  )(
     input logic [31:0] wData,
     output logic [31:0] rData,
     input logic [31:0] addr,
@@ -6,7 +8,7 @@ module dmem (
     input logic clk,
     input logic wEn
   );
-  logic [7:0] mem [4095:0];
+  logic [7:0] mem [DEPTH-1:0];
   logic [31:0] addrplus1;
   logic [31:0] addrplus2;
   logic [31:0] addrplus3;

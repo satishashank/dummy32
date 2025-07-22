@@ -49,7 +49,7 @@ From `./riscv-tests `
 
 this replaces the  `rv32i_test.elf` which is your new executable. This is now `hexdumped` as usual from the root directory's `Makefile` as:
 
-From ./
+From `./`
 
     make
 If the tests pass u should see the following output:
