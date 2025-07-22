@@ -2,6 +2,7 @@
 module core(
     input logic clk,
     input logic rst,
+    input logic usePredict,
     input logic [31:0] imemRdata,
     output logic [31:0] imemAddr,
     input logic [31:0] dmemRdata,
@@ -102,17 +103,22 @@ module core(
   logic regWriteW;
 
   //FETCH STAGE
-  // assign pcF_ = pcSelE?pcTargetE:pcFplus4;
+
   always_comb
   begin
-    case ({wrongBranchE,bPredictTakenF})
-      2'b10,2'b11:
-        pcF_ = pcTargetE;
-      2'b01:
-        pcF_ = btbTargetF;
-      default:
-        pcF_ = pcFplus4;
-    endcase
+    if (usePredict)
+    begin
+      case ({wrongBranchE,bPredictTakenF})
+        2'b10,2'b11:
+          pcF_ = pcTargetE;
+        2'b01:
+          pcF_ = btbTargetF;
+        default:
+          pcF_ = pcFplus4;
+      endcase
+    end
+    else
+      assign pcF_ = pcSelE?pcTargetE:pcFplus4;
 
   end
   assign pcFplus4 = pcF + 4;
@@ -196,7 +202,7 @@ module core(
   assign pcPlusImm = immExtE + pcE;
   assign btbTargetE = pcPlusImm;
 
-  assign pcTargetE = (~pcSelE&bPredictTakenE)?pcEplus4:(pcTargetSrcE ? aluResultE : (pcPlusImm));
+  assign pcTargetE = (~pcSelE&bPredictTakenE&usePredict)?pcEplus4:(pcTargetSrcE ? aluResultE : (pcPlusImm));
   assign pcSelE = (branchE&branchFlagE) ^ jumpE;
   assign btbUpdateE = (~pcTargetSrcE)&(branchE|jumpE); //saving the branch without depending on rs1
   assign wrongBranchE = pcSelE^bPredictTakenE; //flush when pcSelE is there xor bPredictTakens
@@ -299,7 +305,9 @@ module core(
                .r2AddrD(r2AddrD),
                .rdE(rdE),
                .regSrcE0(regSrcE[0]),
-               .wrongBranchE(wrongBranchE)
+               .wrongBranchE(wrongBranchE),
+               .pcSelE(pcSelE),
+               .usePredict(usePredict)
              );
   branchPredictor bPredictor(
                     .clk(clk),

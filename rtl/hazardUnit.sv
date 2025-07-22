@@ -14,18 +14,22 @@ module hazardUnit(output logic [1:0] fwdAE,
                     input logic regWriteM,
                     input logic regWriteW,
                     input logic regSrcE0,
+                    input logic usePredict,
+                    input logic pcSelE,// for testing
                     input logic wrongBranchE
                    );
   logic r1EqMem,r2EqMem,r1EqW,r2EqW;
   logic lwStall;
+  logic bStall; //for testing
   localparam [1:0]
              NO_FWD = 2'b00,
              MEM_FWD = 2'b10,
              WB_FWD = 2'b01
              ;
   assign stallD = lwStall;
-  assign flushE = lwStall|wrongBranchE;
-  assign flushD = wrongBranchE;
+  assign bStall = usePredict?wrongBranchE:pcSelE;
+  assign flushE = lwStall|bStall;
+  assign flushD = bStall;
   assign stallF = lwStall;
   assign lwStall = regSrcE0&((r1AddrD==rdE)|(r2AddrD==rdE))&&(rdE!=0);
   assign r1EqMem = (r1AddrE == rdM)&&(rdM != 0);
