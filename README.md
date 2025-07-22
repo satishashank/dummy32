@@ -15,7 +15,7 @@ A 5-stage pipelined RV32I core started as a block diagram from *"Digital Design 
 * Hazard handling with register forwarding and pipeline stalls
 
   
-Changes in throughput with different buffer sizes on `benchmarck-dhrystone` with `500` iterations with "always-taken" as base:
+Changes in throughput with different buffer sizes on `benchmark-dhrystone` with `500` iterations with "always-taken" as base:
 <p align="center">
 <img width="606" height="457" alt="image" src="https://github.com/user-attachments/assets/84cbd2d5-6a7a-437f-892e-b8ba6ff671fd" />
 </p>
@@ -80,7 +80,9 @@ In case of failure:
     add..error
     ...
 
-## Running benchmark-dhrystone
+## Running benchmark-dhrystone 
+The `dhrystone` folder is ported from `benchmark-dhrystone` and uses newly defined `__mulsi3` and `__divsi3` function to not use double-floating point precision. 
+ 
 Similar to `riscv-tests` running `make` inside the `dhrystone` folder dumps out the `elf` in the root folder. 
 
 The test uses cycle count instead of time since this a simulation enviornment. This is done using a memory-mapped counter `cycleCounter` which is turned ON from a specifc write of `0xAFA51A91` at` 0xFFFFFFF4`. The C code uses function `start_timer`, `stop-timer`and `read-timer` for easy-use (see `dhry.h`).
