@@ -1,4 +1,12 @@
 __pycache__
 ideas.txt
 code.*
+data.*
+results.xml
+testt1.c
 sim_build
+*dump*
+riscv-tests/rv32ui/*.o
+riscv-tests/start.o
+*bin
+*elf

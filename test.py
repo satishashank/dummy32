@@ -8,6 +8,7 @@ from cocotb.triggers import RisingEdge
 @cocotb.test()
 async def isa_test(dut):
     """Try accessing the design."""
+    dut.usePredict.value = 1
     clk = Clock(dut.clk, 1, "ns")
     cocotb.start_soon(clk.start())
     writeData = []
@@ -17,7 +18,7 @@ async def isa_test(dut):
         dut.rst.value = 1
         await Timer(1, "ns")
     dut.rst.value = 0
-    for i in range(20000):
+    while(True):
         await Timer(1, "ns")
         if (dut.uut.regF.writeEn.value == 1):
             try:
