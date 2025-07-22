@@ -6,14 +6,16 @@ ENTRY(_start)
 MEMORY
 {
   IMEM (rx) : ORIGIN = IMEM_BASE, LENGTH = 64K
-  DMEM (rw) : ORIGIN = DMEM_BASE, LENGTH = 4K
+  DMEM (rw) : ORIGIN = DMEM_BASE, LENGTH = 16K
 }
 
 SECTIONS
 {
-  .text : {
-    *(.text*)
-  } > IMEM
+  . = 0x0000000;
+    .text : {
+        *(.text.start)
+        *(.text .text.*)
+    }> IMEM
 
   .data : {
     *(.data*)
@@ -23,6 +25,8 @@ SECTIONS
   .bss : {
     *(.bss*)
     *(COMMON)
-  } > DMEM
+    . = ALIGN(4);
+    __bss_end = .;
+} > DMEM
 
 }
