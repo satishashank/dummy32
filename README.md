@@ -17,7 +17,8 @@ A 5-stage pipelined RV32I core started as a block diagram from *"Digital Design 
   
 Increase in throughput% with different buffer sizes on `benchmark-dhrystone` with `500` iterations and "always-taken" as base:
 <p align="center">
-<img width="452" height="319" alt="image" src="https://github.com/user-attachments/assets/942ff9d5-8ca3-4903-b67e-327e9c6094a4" />
+<img width="400" height="275" alt="Predict" src="https://github.com/user-attachments/assets/a3784fd1-89c9-4f0c-be0a-f411327db40f" />
+
 </p>
 
 
@@ -87,4 +88,4 @@ Similar to `riscv-tests` running `make` inside the `dhrystone` folder dumps out 
 
 The test uses cycle count instead of time since this a simulation enviornment. This is done using a memory-mapped counter `cycleCounter` which is turned ON from a specifc write of `0xAFA51A91` at` 0xFFFFFFF4`. The C code uses function `start_timer`, `stop-timer`and `read-timer` for easy-use (see `dhry.h`).
 
-Number of iterations can be changed from the C code and defaults to `2000`. The minimum number of clock cycles to log out cycle count is kept at `1000`.
+Number of iterations can be changed from the C code and defaults to `500`. The minimum number of clock cycles to log out cycle count is kept at `1000`.
