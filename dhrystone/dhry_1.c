@@ -18,9 +18,7 @@
 #include "dhry.h"
 #include <string.h>
 #include <stdlib.h>
-#ifndef DHRY_ITERS
 #define DHRY_ITERS 500
-#endif
 
 /* Global Variables: */
 

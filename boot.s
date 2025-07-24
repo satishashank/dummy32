@@ -2,7 +2,7 @@
 .global _start
 
 _start:
-    li sp, 0x10000FFC
+    li sp, 0x10003FFC
     call main
 HALT:
     li t0,0xDEADC0DE

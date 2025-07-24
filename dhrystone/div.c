@@ -23,7 +23,7 @@ int __divsi3(int a, int b)
 }
 int __mulsi3(int a, int b)
 {
-    // Convert to unsigned, tracking sign as a boolean:
+    // Convert to unsigned, tracking sign as a boolean(2's complement):
     unsigned ua = (a < 0) ? (unsigned)(~a + 1) : (unsigned)a;
     unsigned ub = (b < 0) ? (unsigned)(~b + 1) : (unsigned)b;
     unsigned ur = 0;
