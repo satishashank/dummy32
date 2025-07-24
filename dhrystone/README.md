@@ -11,10 +11,14 @@ Iterations: 500
 
 * btb 16 entry  |    Cycles:0x000372E1
 
-* btb 32 entry | Cycles:0x00035797
+* btb 32 entry | Cycles:0x00035F63
+
+* btb 64 entry  | Cycles:0x00035797
 
 * btb 128 entry | Cycles:0x00034FCB
 
 * btb 256 entry | Cycles:0x0003309B
 
 * btb 512 entry | Cycles:0x000324E9
+
+* btb 1024 entry | Cycles:0x000324E9

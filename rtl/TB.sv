@@ -79,11 +79,11 @@ module TB;
                         .count(counterCount)
                        );
 
-  // initial
-  // begin
-  //   $dumpfile("");
-  //   $dumpvars(0, TB);
+  initial
+  begin
+    $dumpfile("");
+    $dumpvars(0, TB);
 
-  // end
+  end
 
 endmodule

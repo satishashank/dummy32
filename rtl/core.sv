@@ -118,7 +118,7 @@ module core(
       endcase
     end
     else
-      assign pcF_ = pcSelE?pcTargetE:pcFplus4;
+      pcF_ = pcSelE?pcTargetE:pcFplus4;
 
   end
   assign pcFplus4 = pcF + 4;

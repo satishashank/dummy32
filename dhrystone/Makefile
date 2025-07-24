@@ -1,6 +1,6 @@
 DHRY-LFLAGS =
 
-DHRY-CFLAGS := -O3 -DNOENUM -Wno-implicit
+DHRY-CFLAGS := -O1 -DNOENUM -Wno-implicit
 DHRY-CFLAGS += -fno-builtin-printf -fno-common -falign-functions=4 -nostartfiles 
 GCC-FLAGS = -march=rv32i -mabi=ilp32
 

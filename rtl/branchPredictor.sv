@@ -1,5 +1,5 @@
 module branchPredictor#(
-    parameter int BTB_ENTRIES = 64,
+    parameter int BTB_ENTRIES = 32,
     parameter int INDEX_WIDTH = $clog2(BTB_ENTRIES),
     parameter int TAG_WIDTH = 32 - INDEX_WIDTH
   ) (
