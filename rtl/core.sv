@@ -39,7 +39,7 @@ module core(
   logic [2:0] aluCntrlD,aluCntrlDsv;
   logic useF7D,useF7Dsv;
   logic [2:0] immCntrlD;
-  logic bPredictTakenD,bPredictTakenDsv;
+  logic bPredictTakenD,bPredictTakenDsv,isControlxfer;
 
   //EXECUTE STAGE
   logic [31:0] srcAE;
@@ -203,9 +203,10 @@ module core(
   assign btbTargetE = pcPlusImm;
 
   assign pcTargetE = (~pcSelE&bPredictTakenE&usePredict)?pcEplus4:(pcTargetSrcE ? aluResultE : (pcPlusImm));
-  assign pcSelE = (branchE&branchFlagE) ^ jumpE;
-  assign btbUpdateE = (~pcTargetSrcE)&(branchE|jumpE); //saving the branch without depending on rs1
+  assign pcSelE = (branchE&branchFlagE)| jumpE;
+  assign btbUpdateE = (~pcTargetSrcE)&(isControlxfer); //saving the branch without depending on rs1
   assign wrongBranchE = pcSelE^bPredictTakenE; //flush when pcSelE is there xor bPredictTakens
+  assign isControlxfer = branchE|jumpE;
 
 
   //HAZARD SIGNALS
@@ -309,17 +310,22 @@ module core(
                .pcSelE(pcSelE),
                .usePredict(usePredict)
              );
-  branchPredictor bPredictor(
-                    .clk(clk),
-                    .rst(rst),
-                    .fetchPc(pcF),
-                    .fetchHit(bPredictTakenF),
-                    .fetchTarget(btbTargetF),
-                    .exPc(pcE),
-                    .exTaken(pcSelE),
-                    .exBranch(btbUpdateE),
-                    .exTarget(btbTargetE)
-                  );
+  branchPredictorGshare bPredictor(
+                          .clk(clk),
+                          .rst(rst),
+                          .fetchPc(pcF),
+                          .fetchHit(bPredictTakenF),
+                          .fetchTarget(btbTargetF),
+                          .exPc(pcE),
+                          .exTaken(pcSelE),
+                          .exBranch(btbUpdateE),
+                          .exTarget(btbTargetE)
+                        );
+  csr csr(.clk(clk),
+          .rst(rst),
+          .isControlxfer(isControlxfer),
+          .wrongBranch(wrongBranchE)
+         );
   always_ff@(posedge clk)
   begin
     if (rst)
