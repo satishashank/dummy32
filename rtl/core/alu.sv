@@ -11,7 +11,6 @@ module alu(input logic [2:0] funct3,
             );
   logic zero;
   logic inv;
-  logic useF7_;
   logic f7;
   logic [2:0] aluCntrl;
   logic [4:0] srcBlwr;
