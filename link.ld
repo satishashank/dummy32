@@ -13,7 +13,7 @@ SECTIONS
 {
   . = 0x0000000;
     .text : {
-        *(.text.start)
+        *(.text._start)
         *(.text .text.*)
     }> IMEM
 

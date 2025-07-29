@@ -1,5 +1,5 @@
 module branchPredictor#(
-    parameter int BTB_ENTRIES = 32,
+    parameter int BTB_ENTRIES = 256,
     parameter int INDEX_WIDTH = $clog2(BTB_ENTRIES),
     parameter int TAG_WIDTH = 32 - INDEX_WIDTH
   ) (
@@ -13,7 +13,6 @@ module branchPredictor#(
 
     // EX stage update inputs
     input  logic         exTaken,
-    input logic          exBranch,
     input  logic [31:0]  exPc,
     input  logic [31:0]  exTarget
   );
@@ -61,12 +60,12 @@ module branchPredictor#(
       else //update mem on the first take/not taken
 
       begin
-        if (exBranch) //only store intentional jumps and branches jal,bne etc
+        if (exTaken) //only store taken jumps and branches jal,bne etc
         begin
           btb_mem[exIndex].valid <= 1;
           btb_mem[exIndex].tag <= exTag;
           btb_mem[exIndex].target <= exTarget;
-          btb_mem[exIndex].counter <= exTaken?wTaken:wNtaken;
+          btb_mem[exIndex].counter <= wTaken;
         end
       end
 

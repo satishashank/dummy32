@@ -1,22 +1,20 @@
-module hazardUnit(output logic [1:0] fwdAE,
-                    output logic [1:0] fwdBE,
-                    output logic flushE,
-                    output logic flushD,
-                    output logic stallD,
-                    output logic stallF,
-                    input logic [4:0] r1AddrE,
-                    input logic [4:0] r2AddrE,
-                    input logic [4:0] r1AddrD,
-                    input logic [4:0] r2AddrD,
-                    input logic [4:0] rdM,
-                    input logic [4:0] rdE,
-                    input logic [4:0] rdW,
-                    input logic regWriteM,
-                    input logic regWriteW,
-                    input logic regSrcE0,
-                    input logic usePredict,
-                    input logic pcSelE,// for testing
-                    input logic wrongBranchE
+module hazardUnit(  output logic [1:0] fwdAE,
+                      output logic [1:0] fwdBE,
+                      output logic flushE,
+                      output logic flushD,
+                      output logic stallD,
+                      output logic stallF,
+                      input logic [4:0] r1AddrE,
+                      input logic [4:0] r2AddrE,
+                      input logic [4:0] r1AddrD,
+                      input logic [4:0] r2AddrD,
+                      input logic [4:0] rdM,
+                      input logic [4:0] rdE,
+                      input logic [4:0] rdW,
+                      input logic regWriteM,
+                      input logic regWriteW,
+                      input logic regSrcE0,
+                      input logic wrongBranchE
                    );
   logic r1EqMem,r2EqMem,r1EqW,r2EqW;
   logic lwStall;
@@ -27,7 +25,7 @@ module hazardUnit(output logic [1:0] fwdAE,
              WB_FWD = 2'b01
              ;
   assign stallD = lwStall;
-  assign bStall = usePredict?wrongBranchE:pcSelE;
+  assign bStall = wrongBranchE;
   assign flushE = lwStall|bStall;
   assign flushD = bStall;
   assign stallF = lwStall;

@@ -1,28 +1,47 @@
 `timescale 1ns/1ps
-module alu(input logic [2:0] aluCntrl,
+module alu(input logic [2:0] funct3,
+             input logic funct7_6,
+             input logic branch,
              input logic useF7,
-             input logic inv,
-             input logic loadStore,
+             input logic useRegAdd,
              input logic [31:0] srcA,
              input logic [31:0] srcB,
              output logic [31:0] aluResult,
              output logic branchFlag
             );
   logic zero;
-  logic [2:0] aluCntrlint;
+  logic inv;
+  logic useF7_;
+  logic f7;
+  logic [2:0] aluCntrl;
   logic [4:0] srcBlwr;
-  assign srcBlwr = srcB[4:0];
-  assign aluCntrlint = loadStore?3'b0:aluCntrl;
 
+
+  //ALU DECODE
+  always_comb
+  begin
+    aluCntrl = funct3;
+    inv = 0;
+    f7 = useF7&funct7_6;
+    if(branch)
+    begin
+      aluCntrl = {1'b0,funct3[2:1]};
+      inv = funct3[0];
+      f7 = ~(|funct3[2:1]); //use for neq and eq
+    end
+    else if(useRegAdd)
+      aluCntrl = 3'b0;
+  end
+  assign srcBlwr = srcB[4:0];
 
   always_comb
   begin
     zero = 0;
     branchFlag = 0;
-    case (aluCntrlint)
+    case (aluCntrl)
       3'b000:
       begin
-        if (useF7)
+        if (f7)
         begin
           aluResult = ($signed(srcA) - $signed(srcB));
           zero = ~(|aluResult);
@@ -48,7 +67,7 @@ module alu(input logic [2:0] aluCntrl,
       3'b100:
         aluResult = srcA ^ srcB;
       3'b101:
-        if (useF7)
+        if (f7)
         begin
           aluResult = $signed(srcA) >>> srcBlwr;
         end

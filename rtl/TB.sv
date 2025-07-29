@@ -5,6 +5,9 @@ module TB;
   logic clk;
   logic rst;
 
+  //testing
+  logic usePredictor;
+
   // Signals for imem and dmem
   logic [31:0] imemRdata;
   logic [31:0] imemAddr;
@@ -22,7 +25,6 @@ module TB;
   logic counterTurnOn;
   logic counterTurnOff;
   logic [31:0]counterCount;
-  logic usePredict;
 
 
   assign uartData = dmemWdata[7:0];
@@ -44,7 +46,7 @@ module TB;
   core uut (
          .clk(clk),
          .rst(rst),
-         .usePredict(usePredict),
+         .usePredictor(usePredictor),
          .imemRdata(imemRdata),
          .imemAddr(imemAddr),
          .dmemRdata(dmemRdataFinal),
@@ -52,6 +54,7 @@ module TB;
          .dmemSize(dmemSize),
          .dmemWen(dmemWen),
          .dmemAddr(dmemAddr)
+
        );
   imem instr (
          .clk(clk),

@@ -1,6 +1,6 @@
 module branchPredictorGshare#(
-    parameter int BTB_ENTRIES = 32,
-    parameter int PHT_ENTRIES = 128,
+    parameter int BTB_ENTRIES = 256,
+    parameter int PHT_ENTRIES = 1024,
     parameter int GHR_WIDTH = $clog2(PHT_ENTRIES),
     parameter int BTB_INDEX_WIDTH = $clog2(BTB_ENTRIES),
     parameter int BTB_TAG_WIDTH = 32 - BTB_INDEX_WIDTH
