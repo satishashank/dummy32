@@ -1,87 +1,108 @@
-module branchPredictor#(
-    parameter int BTB_ENTRIES = 256,
-    parameter int INDEX_WIDTH = $clog2(BTB_ENTRIES),
-    parameter int TAG_WIDTH = 32 - INDEX_WIDTH
-  ) (
-    input  logic         clk,
-    input  logic         rst,
-
-    // Fetch stage inputs
-    input  logic [31:0]  fetchPc,
-    output logic         fetchHit,
-    output logic [31:0]  fetchTarget,
-
-    // EX stage update inputs
-    input  logic         exTaken,
-    input  logic [31:0]  exPc,
-    input  logic [31:0]  exTarget
+module branchPredictor #(
+    parameter int BTB_ENTRIES    = 64,
+    parameter int TARGET_WIDTH   = 32,
+    parameter int COUNTER_WIDTH  = 2,
+    parameter int INDEX_WIDTH    = $clog2(BTB_ENTRIES),
+    parameter int TAG_WIDTH      = 32 - INDEX_WIDTH
+  )(
+    input  logic                   clk,
+    input  logic                   rst,
+    input  logic [31:0]            fetchPc,
+    output logic                   fetchHit,
+    output logic [TARGET_WIDTH-1:0] fetchTarget,
+    input  logic                   exTaken,
+    input  logic                   exBranch,
+    input  logic [31:0]            exPc,
+    input  logic [TARGET_WIDTH-1:0] exTarget
   );
 
+  // Memory layout: [TAG | TARGET | COUNTER | VALID]
+  localparam int VALID_BIT     = 0;
+  localparam int COUNTER_LSB   = VALID_BIT + 1;
+  localparam int COUNTER_MSB   = COUNTER_LSB + COUNTER_WIDTH - 1;
+  localparam int TARGET_LSB    = COUNTER_MSB + 1;
+  localparam int TARGET_MSB    = TARGET_LSB + TARGET_WIDTH - 1;
+  localparam int TAG_LSB       = TARGET_MSB + 1;
+  localparam int TAG_MSB       = TAG_LSB + TAG_WIDTH - 1;
+  localparam int MEM_WIDTH     = TAG_MSB + 1;
 
-  typedef struct packed {
-            logic valid;
-            logic [TAG_WIDTH-1:0] tag;
-            logic [31:0] target;
-            logic [1:0] counter;
-          } btb_entry_t;
+  logic [MEM_WIDTH-1:0] btb_mem [BTB_ENTRIES-1:0];
 
-  btb_entry_t btb_mem [BTB_ENTRIES-1:0];
-  logic [INDEX_WIDTH-1:0] fetchIndex;
-  logic [TAG_WIDTH-1:0]   fetchTag;
-  logic [INDEX_WIDTH-1:0] exIndex;
-  logic [TAG_WIDTH-1:0]   exTag;
+  logic [INDEX_WIDTH-1:0] fetchIndex, exIndex;
+  logic [TAG_WIDTH-1:0] fetchTag, exTag;
+  logic [TAG_WIDTH-1:0] fetchTagBtb, exTagBtb;
+  logic [COUNTER_WIDTH-1:0] fetchCounter, exCounter;
+
+  logic [MEM_WIDTH-1:0] fetchEntry, exEntry_, exEntryUpdated;
+  logic [1:0] count, nextCount;
   logic exHit;
 
-  logic [1:0] nextCount,count;
+  assign fetchIndex = fetchPc[INDEX_WIDTH+1:2];
+  assign exIndex    = exPc[INDEX_WIDTH+1:2];
+
+  assign fetchEntry = btb_mem[fetchIndex];
+  assign exEntry_   = btb_mem[exIndex];
+
+  assign fetchTag   = fetchPc[31:INDEX_WIDTH];
+  assign exTag      = exPc[31:INDEX_WIDTH];
+
+  assign fetchTagBtb = fetchEntry[TAG_MSB:TAG_LSB];
+  assign exTagBtb    = exEntry_[TAG_MSB:TAG_LSB];
+
+  assign fetchCounter = fetchEntry[COUNTER_MSB:COUNTER_LSB];
+  assign exCounter    = exEntry_[COUNTER_MSB:COUNTER_LSB];
+
+  assign fetchHit    = fetchEntry[VALID_BIT] && (fetchTagBtb == fetchTag) && fetchCounter[1];
+  assign fetchTarget = fetchEntry[TARGET_MSB:TARGET_LSB];
+  assign exHit       = exEntry_[VALID_BIT] && (exTagBtb == exTag);
+  assign count       = exCounter;
+
   localparam [1:0]
              sNtaken = 2'b00,
              wNtaken = 2'b01,
-             wTaken = 2'b10,
-             sTaken = 2'b11;
+             wTaken  = 2'b10,
+             sTaken  = 2'b11;
 
-
-  assign exIndex = exPc[INDEX_WIDTH+1:2];
-  assign exTag  = exPc[31:INDEX_WIDTH];
-  assign fetchIndex = fetchPc[INDEX_WIDTH+1:2];
-  assign fetchTag  = fetchPc[31:INDEX_WIDTH];
-
-  assign fetchHit = (btb_mem[fetchIndex].valid && (btb_mem[fetchIndex].tag == fetchTag))&&btb_mem[fetchIndex].counter[1];
-  assign fetchTarget = btb_mem[fetchIndex].target;
-  assign exHit = btb_mem[exIndex].valid && (btb_mem[exIndex].tag == exTag);
-  assign count = btb_mem[exIndex].counter;
-
-  always_ff@(posedge clk)
-  begin
-    if ((!rst))
-      if(exHit)
-      begin
-        btb_mem[exIndex].counter <= nextCount;
-      end
-      else //update mem on the first take/not taken
-
-      begin
-        if (exTaken) //only store taken jumps and branches jal,bne etc
-        begin
-          btb_mem[exIndex].valid <= 1;
-          btb_mem[exIndex].tag <= exTag;
-          btb_mem[exIndex].target <= exTarget;
-          btb_mem[exIndex].counter <= wTaken;
-        end
-      end
-
-  end
   always_comb
   begin
     case (count)
       wTaken:
-        nextCount = exTaken?sTaken:wNtaken;
+        nextCount = exTaken ? sTaken : wNtaken;
       sTaken:
-        nextCount = exTaken?count:wTaken;
+        nextCount = exTaken ? sTaken : wTaken;
       wNtaken:
-        nextCount = exTaken?wTaken:sNtaken;
+        nextCount = exTaken ? wTaken : sNtaken;
       sNtaken:
-        nextCount = exTaken?wNtaken:count;
+        nextCount = exTaken ? wNtaken : sNtaken;
+      default:
+        nextCount = wTaken;
     endcase
+  end
+
+  always_comb
+  begin
+    exEntryUpdated = '0;
+    if (exHit)
+    begin
+      exEntryUpdated = exEntry_;
+      exEntryUpdated[COUNTER_MSB:COUNTER_LSB] = nextCount;
+    end
+    else if (exTaken)
+    begin
+      exEntryUpdated[VALID_BIT]               = 1'b1;
+      exEntryUpdated[TAG_MSB:TAG_LSB]         = exTag;
+      exEntryUpdated[TARGET_MSB:TARGET_LSB]   = exTarget;
+      exEntryUpdated[COUNTER_MSB:COUNTER_LSB] = wTaken;
+    end
+  end
+
+  always_ff @(posedge clk)
+  begin
+    if (!rst)
+    begin
+      if (exHit || exTaken)
+        btb_mem[exIndex] <= exEntryUpdated;
+    end
   end
 
 endmodule
