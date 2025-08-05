@@ -328,7 +328,6 @@ main()
   uart_puts(Str_2_Loc);
   uart_puts("        should be:   DHRYSTONE PROGRAM, 2'ND STRING\n");
   uart_putc('\n');
-  uart_putc('\n');
 
   if (User_Cycles < Too_Small_Cycles)
   {

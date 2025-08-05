@@ -14,6 +14,8 @@ A 5-stage pipelined RV32I core started as a block diagram from *"Digital Design 
 
 * Hazard handling with register forwarding and pipeline stalls
 
+* Added zicsr support to log wrong branches and control transfers
+
   
 Impact of branch prediction on `benchmark-dhrystone` with `500` iterations and "always-taken" as base:
 <p align="center">
@@ -85,6 +87,24 @@ The `dhrystone` folder is ported from `benchmark-dhrystone` and uses newly defin
  
 Similar to `riscv-tests` running `make` inside the `dhrystone` folder dumps out the `elf` in the root folder. 
 
-The test uses cycle count instead of time since this a simulation enviornment. This is done using a memory-mapped counter `cycleCounter` which is turned ON from a specifc write of `0xAFA51A91` at` 0xFFFFFFF4`. The C code uses function `start_timer`, `stop-timer`and `read-timer` for easy-use (see `dhry.h`).
+The test uses cycle count instead of time since this a simulation enviornment. This is done using a memory-mapped counter `cycleCounter` which is turned ON from a specifc write of `0xAFA51A91` at` 0xFFFFFFF4`. The C code uses function `start_timer`, `stop-timer`and `read-timer` for easy-use (see `dhry.h`).Additionally, the benchmark also logs out the number of wrong branches and the number of control transfers to gauge the branch-predictor's accuracy.
 
 Number of iterations can be changed from the C code and defaults to `500`. The minimum number of clock cycles to log out cycle count is kept at `1000`.
+
+
+Correct run of the benchmark gives the following output:
+
+    Dhrystone Benchmark, Version 2.1 (Language: C)
+
+    Program compiled without 'register' attribute
+
+    Execution starts, 0x000001F4 runs through Dhrystone
+    ...
+    
+    Str_1_Loc:           DHRYSTONE PROGRAM, 1'ST STRING        should be:   DHRYSTONE PROGRAM, 1'ST STRING
+
+    Str_2_Loc:           DHRYSTONE PROGRAM, 2'ND STRING        should be:   DHRYSTONE PROGRAM, 2'ND STRING
+
+    Total Cycles:                          0x00033485
+    Number of Wrong branches:              0x00002B0C
+    Number of Control Xfers:               0x0000520A
