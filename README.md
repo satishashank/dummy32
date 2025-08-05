@@ -16,7 +16,7 @@ A 5-stage pipelined RV32I core started as a block diagram from *"Digital Design 
 
 * Hazard handling with register forwarding and pipeline stalls
 
-* Added zicsr support to log wrong branches and control transfers
+* Zicsr support to log wrong branches and control transfers
 
   
 Impact of branch prediction on `benchmark-dhrystone` with `500` iterations and "always-taken" as base:
