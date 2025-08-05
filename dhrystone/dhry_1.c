@@ -18,6 +18,7 @@
 #include "dhry.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 #define DHRY_ITERS 500
 
 /* Global Variables: */
@@ -162,8 +163,11 @@ main()
   /***************/
   /* Start timer */
   /***************/
+  uint32_t wrongBranches0, controlXfer0, wrongBranches1, controlXfer1;
 
 #ifdef TIMES
+  asm volatile("csrr %0, 0x80" : "=r"(wrongBranches0));
+  asm volatile("csrr %0, 0x81" : "=r"(controlXfer0));
   start_timer();
 #endif
 
@@ -216,6 +220,8 @@ main()
   /**************/
   /* Stop timer */
   /**************/
+  asm volatile("csrr %0, 0x80" : "=r"(wrongBranches1));
+  asm volatile("csrr %0, 0x81" : "=r"(controlXfer1));
   stop_timer();
 
 #ifdef TIMES
@@ -228,7 +234,7 @@ main()
   End_Time = clock();
 #endif
 
-  uart_puts("Execution ends\n");
+  uart_puts("Execution end s\n");
   uart_putc('\n');
 
   uart_puts("Final values of the variables used in the benchmark:");
@@ -332,7 +338,13 @@ main()
   }
   else
   {
-    uart_putsi("Total Cycles:", User_Cycles);
+    uart_putsi("Total Cycles:                          ", User_Cycles);
+    uart_putc('\n');
+    uart_putsi("Number of Wrong branches:              ", (wrongBranches1 - wrongBranches0));
+    uart_putc('\n');
+    uart_putsi("Number of Control Xfers:               ", (controlXfer1 - controlXfer0));
+    uart_putc('\n');
+
     uart_putc('\n');
     uart_putc('\n');
   }

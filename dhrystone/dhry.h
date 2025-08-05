@@ -343,7 +343,7 @@
  *
  ***************************************************************************
  */
-
+#include <stdint.h>
 /* Compiler and system dependent definitions: */
 #define TIMES // Use custom tick timer instead of <sys/times.h>
 // Memory-mapped 32-bit timer address (change if needed)
@@ -357,7 +357,8 @@ static inline Timer_Tick_Type read_timer(void)
 {
         return *TIMER_ADDR;
 }
-static inline void start_timer(void)
+
+static inline uint32_t start_timer(void)
 {
         *(TIMER_REG_ADDR) = 0xAFA51A91;
 }
