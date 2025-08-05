@@ -15,9 +15,9 @@ A 5-stage pipelined RV32I core started as a block diagram from *"Digital Design 
 * Hazard handling with register forwarding and pipeline stalls
 
   
-Increase in throughput% with different buffer sizes on `benchmark-dhrystone` with `500` iterations and "always-taken" as base:
+Impact of branch prediction on `benchmark-dhrystone` with `500` iterations and "always-taken" as base:
 <p align="center">
-<img width="741" height="555" alt="Btb" src="https://github.com/user-attachments/assets/b5da3240-2326-479a-ac0c-c65d42c747dd" />
+<img width="420" height="320" alt="Btb" src="https://github.com/user-attachments/assets/b5da3240-2326-479a-ac0c-c65d42c747dd" />
 </p>
 
 
