@@ -6,7 +6,7 @@ A 5-stage pipelined RV32I core started as a block diagram from *"Digital Design 
 
 * Passes all [riscv-tests](https://github.com/riscv/riscv-tests) for RV32I
 
-* Runs [benchmark-dhrystone](https://github.com/sifive/benchmark-dhrystone)
+* Runs [benchmark-dhrystone](https://github.com/sifive/benchmark-dhrystone) with a CPI of 1.164 (1000 iters)
 
 * Synthesizeable using [yosys](https://github.com/YosysHQ/yosys)
 
@@ -14,17 +14,15 @@ A 5-stage pipelined RV32I core started as a block diagram from *"Digital Design 
 
 * Branch predictor can be turned off in the testbench for before and after
 
-* Hazard handling with register forwarding and pipeline stalls
-
 * Zicsr support to log wrong branches and control transfers
 
   
 Impact of branch prediction on `benchmark-dhrystone` with `500` iterations and "always-taken" as base:
 <p align="center">
-<img width="420" height="320" alt="Btb" src="https://github.com/user-attachments/assets/b5da3240-2326-479a-ac0c-c65d42c747dd" />
+  <img width="704" height="443" alt="image" src="https://github.com/user-attachments/assets/82cf2d0c-3938-4206-af38-cf3d3d52e881" />
 </p>
 
-See [dhrystone](./dhrystone) for more details.
+See [dhrystone](./dhrystone) for more in-depth metrics.
 
 
 ## Prerequisites:
