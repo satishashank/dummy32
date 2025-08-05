@@ -22,7 +22,7 @@ module stageExecute (
     output logic regWrite,memWrite,csrWrite,
     output logic [11:0] csrAddr,
     output logic [1:0] regSrc,
-    output logic btbUpdate,wrongBranch,pcSel,branch,controlXfer,
+    output logic btbUpdate,wrongBranch,pcSel,branch,controlXfer,validInst,
     output logic [31:0] pc,btbTarget
   );
 
@@ -126,8 +126,8 @@ module stageExecute (
   assign pcTarget = (!pcSel&bPredictedTaken)?pcPlus4:(isJalr?aluResult:pcPlusImm); // took the wrong branch
   assign pcSel = (branch&branchFlag) | jump;
   assign wrongBranch = pcSel^bPredictedTaken; //flush when pcSelE is there xor bPredictTaken
-  assign controlXfer = pcSel; //use something else?
-
+  assign controlXfer = jump|branch; //use something else?
+  assign validInst = |pc;
   alu alu (
         .funct3(funct3),
         .useF7(useF7),

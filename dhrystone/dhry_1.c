@@ -163,11 +163,13 @@ main()
   /***************/
   /* Start timer */
   /***************/
-  uint32_t wrongBranches0, controlXfer0, wrongBranches1, controlXfer1;
+  uint32_t wrongBranches0, controlXfer0, wrongBranches1, controlXfer1, N_instructions0, N_instructions1;
 
 #ifdef TIMES
   asm volatile("csrr %0, 0x80" : "=r"(wrongBranches0));
   asm volatile("csrr %0, 0x81" : "=r"(controlXfer0));
+  asm volatile("csrr %0, 0x82" : "=r"(N_instructions0));
+
   start_timer();
 #endif
 
@@ -222,6 +224,7 @@ main()
   /**************/
   asm volatile("csrr %0, 0x80" : "=r"(wrongBranches1));
   asm volatile("csrr %0, 0x81" : "=r"(controlXfer1));
+  asm volatile("csrr %0, 0x82" : "=r"(N_instructions1));
   stop_timer();
 
 #ifdef TIMES
@@ -343,7 +346,8 @@ main()
     uart_putc('\n');
     uart_putsi("Number of Control Xfers:               ", (controlXfer1 - controlXfer0));
     uart_putc('\n');
-
+    uart_putsi("Number of Instructions:                ", (N_instructions1 - N_instructions0));
+    uart_putc('\n');
     uart_putc('\n');
     uart_putc('\n');
   }

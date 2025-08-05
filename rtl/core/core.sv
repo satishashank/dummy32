@@ -33,7 +33,7 @@ module core(
   logic D_csrOp,D_aluSrcB;
   logic [11:0] D_csrAddr;
   // execute -> Decode
-  logic E_controlXfer;
+  logic E_controlXfer,E_validInst;
   // execute -> memory
   logic [4:0]   E_rdAddr;
   logic [2:0]   E_loadStoreSize;
@@ -125,6 +125,7 @@ module core(
                 .immExt             (D_immExt),
                 .csrAddr            (D_csrAddr),
                 .wrongBranch        (E_wrongBranch),
+                .validInst          (E_validInst),
                 .csrOp              (D_csrOp),
                 .controlXfer        (E_controlXfer),
                 .bPredictedTaken    (D_bPredictedTaken),
@@ -187,6 +188,7 @@ module core(
                  .btbUpdate       (E_btbUpdate),
                  .branch          (E_branch),
                  .wrongBranch     (E_wrongBranch),
+                 .validInst       (E_validInst),
                  .controlXfer     (E_controlXfer),
                  .pc              (E_pc),
                  .btbTarget       (E_btbTarget),

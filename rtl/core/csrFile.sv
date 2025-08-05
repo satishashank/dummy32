@@ -6,6 +6,7 @@ module csrFile#(
     input logic [31:0] wData,
     input logic [11:0] wAddr,
     input logic  wrongBranch,
+    input logic validInst,
     input logic  controlXfer,
     input logic [3:0] readAddr,
     input logic clk
@@ -23,6 +24,8 @@ module csrFile#(
     end
     csRegisters[0] <= csRegisters[0] + {30'b0,wrongBranch};
     csRegisters[1] <= csRegisters[1] + {30'b0,controlXfer};
+    csRegisters[2] <= csRegisters[2] + {30'b0,validInst};
+
   end
 
 

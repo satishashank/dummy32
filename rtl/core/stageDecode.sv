@@ -6,7 +6,7 @@ module stageDecode (
     input logic csrWriteW,
     input logic [11:0] csrAddrW,
     input logic [31:0] csrResultW,
-    input logic wrongBranch,controlXfer,
+    input logic wrongBranch,controlXfer,validInst,
     input logic [31:0] instrF,pcF,pcPlus4F,
     input logic bPredictedTakenF,
     input logic [4:0] rdAddrW,
@@ -89,6 +89,7 @@ module stageDecode (
             .readAddr(csrAddr[3:0]),
             .controlXfer(controlXfer),
             .wrongBranch(wrongBranch),
+            .validInst(validInst),
             .wEn(csrWriteW),
             .wAddr(csrAddrW),
             .wData(csrResultW)
