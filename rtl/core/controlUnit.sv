@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 module controlUnit (
     input logic [4:0] op,
-    input logic [2:0] funct3,
+    input logic [1:0] funct3,
     output logic regWrite,memWrite,
     output logic branch,
     output logic jump,
@@ -10,13 +10,14 @@ module controlUnit (
     output logic useF7,
     output logic [1:0] regSrc,
     output logic useRegAdd,
-    output logic aluSrcB
+    output logic aluSrcB,
+    output logic csrOp
   );
 
   logic shift;
   logic wrongOpcode;
   assign shift = (!funct3[1])&(funct3[0]);
-  assign aluSrcB = (~branch)&(|immCntrl);
+  assign aluSrcB = (!branch)&(|immCntrl); //branch uses pcPlusImm and rs2
   localparam [4:
               0]
              OPCODE_RTYPE  = 5'b01100,
@@ -42,14 +43,12 @@ module controlUnit (
               0]
              ALU_SRC = 2'b00,
              MEM_SRC = 2'b01,
-             PC_SRC = 2'b10,
-             CSR = 2'b11;
+             PC_SRC = 2'b10;
 
-  localparam [1:
-              0]
+  localparam [1:0]
              RS1 = 2'b0,
-             ZERO = 2'b11,
-             PC = 2'b1;
+             PC = 2'b1,
+             ZERO = 2'b11;
 
 
   always_comb
@@ -64,6 +63,7 @@ module controlUnit (
     regWrite = 1;
     memWrite = 0;
     regSrc = ALU_SRC;
+    csrOp = 0;
 
     case (op)
       OPCODE_RTYPE:
@@ -107,6 +107,13 @@ module controlUnit (
         immCntrl = IMM_TYPE_U;
         useRegAdd = 1;
         aluSrcA = op[3]?ZERO:PC;
+      end
+      OPCODE_CSR:
+      begin
+        regSrc = ALU_SRC;
+        regWrite = 1;
+        aluSrcA = ZERO;
+        csrOp = 1;
       end
       default:
       begin

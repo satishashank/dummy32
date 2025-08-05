@@ -2,6 +2,7 @@
 module alu(input logic [2:0] funct3,
              input logic funct7_6,
              input logic branch,
+             input logic csrOp,
              input logic useF7,
              input logic useRegAdd,
              input logic [31:0] srcA,
@@ -28,7 +29,7 @@ module alu(input logic [2:0] funct3,
       inv = funct3[0];
       f7 = ~(|funct3[2:1]); //use for neq and eq
     end
-    else if(useRegAdd)
+    else if(useRegAdd|csrOp)
       aluCntrl = 3'b0;
   end
   assign srcBlwr = srcB[4:0];

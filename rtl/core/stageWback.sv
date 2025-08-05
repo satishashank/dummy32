@@ -3,18 +3,21 @@ module stageWback (
     input logic clk,
     input logic rst,
     input logic [1:0] regSrcM,
-    input regWriteM,
+    input logic [11:0] csrAddrM,
+    input regWriteM,csrWriteM,
     input logic [4:0] rdAddrM,
-    input logic [31:0] aluResultM,readDataM,pcPlus4M,
-    output logic regWrite,
+    input logic [31:0] aluResultM,readDataM,pcPlus4M,csrResultM,
+    output logic regWrite,csrWrite,
+    output logic [11:0] csrAddr,
     output logic [4:0] rdAddr,
-    output logic [31:0] result
+    output logic [31:0] regResult,csrResult
   );
   // Pipeline regs
-  logic [31:0] readDataSv,pcPlus4Sv,aluResultSv;
+  logic [31:0] readDataSv,pcPlus4Sv,aluResultSv,csrResultSv;
   logic [4:0] rdAddrSv;
-  logic  regWriteSv;
+  logic  regWriteSv,csrWriteSv;
   logic [1:0] regSrcSv;
+  logic [11:0] csrAddrSv;
 
   //Internal signal
   logic [1:0] regSrc;
@@ -24,6 +27,9 @@ module stageWback (
   assign regWrite = regWriteSv;
   assign regSrc = regSrcSv;
   assign rdAddr = rdAddrSv;
+  assign csrResult = csrResultSv;
+  assign csrWrite = csrWriteSv;
+  assign csrAddr = csrAddrSv;
 
   localparam [1:0]
              ALU_SRC = 2'b00,
@@ -33,13 +39,13 @@ module stageWback (
   begin
     case (regSrc)
       ALU_SRC:
-        result = aluResultSv;
+        regResult = aluResultSv;
       MEM_SRC:
-        result = readDataSv;
+        regResult = readDataSv;
       PC_SRC:
-        result = pcPlus4Sv;
+        regResult = pcPlus4Sv;
       default:
-        result = 0;
+        regResult = 0;
     endcase
   end
 
@@ -48,11 +54,14 @@ module stageWback (
     if (rst)
     begin
       readDataSv   <= 0;
-      rdAddrSv         <= 0;
+      rdAddrSv     <= 0;
       pcPlus4Sv    <= 0;
       regWriteSv   <= 0;
       aluResultSv  <= 0;
       regSrcSv     <= 0;
+      csrResultSv  <= 0;
+      csrWriteSv   <= 0;
+      csrAddrSv    <= 0;
     end
     else
     begin
@@ -62,6 +71,9 @@ module stageWback (
       regWriteSv <= regWriteM;
       aluResultSv <= aluResultM;
       regSrcSv <= regSrcM;
+      csrResultSv  <= csrResultM;
+      csrWriteSv   <= csrWriteM;
+      csrAddrSv    <= csrAddrM;
     end
 
   end

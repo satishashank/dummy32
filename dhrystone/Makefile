@@ -2,7 +2,7 @@ DHRY-LFLAGS =
 
 DHRY-CFLAGS := -O1 -DNOENUM -Wno-implicit
 DHRY-CFLAGS += -fno-builtin-printf -fno-common -falign-functions=4 -nostartfiles 
-GCC-FLAGS = -march=rv32i -mabi=ilp32
+GCC-FLAGS = -march=rv32i_zicsr -mabi=ilp32
 
 #Uncomment below for FPGA run, default DHRY_ITERS is 2000 for RTL
 #DHRY-CFLAGS += -DDHRY_ITERS=20000000

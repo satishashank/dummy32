@@ -100,7 +100,7 @@ module branchPredictor #(
   begin
     if (!rst)
     begin
-      if (exHit || exTaken)
+      if (exHit | exTaken)
         btb_mem[exIndex] <= exEntryUpdated;
     end
   end

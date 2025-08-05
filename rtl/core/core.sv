@@ -12,46 +12,53 @@ module core(
     output logic [31:0]  dmemAddr
   );
 
-  // predictor → fetch
+  // predictor -> fetch
   logic         P_bPredictTaken;
   logic [31:0]  P_btbTarget;
 
-  // execute → fetch
+  // execute -> fetch
   logic         E_wrongBranch;
   logic [31:0]  E_pcTarget;
-  // fetch → decode
+  // fetch -> decode
   logic [31:0]  F_instr, F_pcPlus4, F_pc;
   logic         F_bPredictedTaken;
-  // decode → execute
+  // decode -> execute
   logic [4:0]   D_rdAddr, D_r1Addr, D_r2Addr;
   logic         D_bPredictedTaken;
   logic         D_regWrite, D_branch, D_jump,D_memWrite;
   logic         D_useF7, D_useRegAdd, D_funct7_6;
-  logic [31:0]  D_pc, D_pcPlus4, D_r1, D_r2, D_immExt;
+  logic [31:0]  D_pc, D_pcPlus4, D_a, D_b,D_immExt;
   logic [2:0]   D_funct3;
   logic [1:0]   D_aluSrcA, D_regSrc;
-  logic         D_aluSrcB;
-  // execute → memory
+  logic D_csrOp,D_aluSrcB;
+  logic [11:0] D_csrAddr;
+  // execute -> Decode
+  logic E_controlXfer;
+  // execute -> memory
   logic [4:0]   E_rdAddr;
   logic [2:0]   E_loadStoreSize;
-  logic [31:0]  E_aluResult, E_writeData, E_pcPlus4, E_pc;
-  logic         E_regWrite, E_memWrite;
+  logic [31:0]  E_aluResult, E_writeData, E_pcPlus4, E_pc,E_csrResult;
+  logic         E_regWrite, E_memWrite,E_csrWrite;
+  logic [11:0] E_csrAddr;
   logic [1:0]   E_regSrc;
-  logic         E_btbUpdate,E_pcSel;
-  logic [31:0]  E_btbTarget;
   logic [4:0] E_r1Addr,E_r2Addr;
-  // memory → writeback
-  logic [31:0]  M_pcPlus4, M_aluResult,M_readData;
+  // execute -> predictor
+  logic         E_btbUpdate,E_pcSel,E_branch;
+  logic [31:0]  E_btbTarget;
+  // memory -> writeback
+  logic [31:0]  M_pcPlus4, M_aluResult,M_readData,M_csrResult;
   logic [4:0]   M_rdAddr;
-  logic         M_regWrite;
+  logic         M_regWrite,M_csrWrite;
+  logic [11:0]  M_csrAddr;
   logic [1:0]   M_regSrc;
   logic [2:0]   M_dmemSize;
   logic [31:0]  M_dmemWdata, M_dmemAddr,M_dmemRdata;
   logic         M_dmemWen;
   // writeback
-  logic [31:0]  W_rd;
+  logic [31:0]  W_rd,W_csrResult;
   logic [4:0]   W_rdAddr;
-  logic         W_regWrite;
+  logic [11:0]  W_csrAddr;
+  logic         W_regWrite,W_csrWrite;
   // forwarding & stall
   logic         H_stallF;
   logic [1:0]   H_fwdAE, H_fwdBE;
@@ -100,6 +107,9 @@ module core(
                 .rst                (rst),
                 .stall              (H_stallD),
                 .flush              (H_flushD),
+                .csrResultW         (W_csrResult),
+                .csrAddrW           (W_csrAddr),
+                .csrWriteW          (W_csrWrite),
                 .instrF             (F_instr),
                 .pcF                (F_pc),
                 .pcPlus4F           (F_pcPlus4),
@@ -110,6 +120,13 @@ module core(
                 .rdAddr             (D_rdAddr),
                 .r1Addr             (D_r1Addr),
                 .r2Addr             (D_r2Addr),
+                .a                  (D_a),
+                .b                  (D_b),
+                .immExt             (D_immExt),
+                .csrAddr            (D_csrAddr),
+                .wrongBranch        (E_wrongBranch),
+                .csrOp              (D_csrOp),
+                .controlXfer        (E_controlXfer),
                 .bPredictedTaken    (D_bPredictedTaken),
                 .memWrite           (D_memWrite),
                 .regWrite           (D_regWrite),
@@ -120,13 +137,10 @@ module core(
                 .funct7_6           (D_funct7_6),
                 .pc                 (D_pc),
                 .pcPlus4            (D_pcPlus4),
-                .r1                 (D_r1),
-                .r2                 (D_r2),
-                .immExt             (D_immExt),
                 .funct3             (D_funct3),
                 .aluSrcA            (D_aluSrcA),
-                .regSrc             (D_regSrc),
-                .aluSrcB            (D_aluSrcB)
+                .aluSrcB            (D_aluSrcB),
+                .regSrc             (D_regSrc)
               );
 
   stageExecute execute (
@@ -139,8 +153,8 @@ module core(
                  .resultW         (W_rd),
                  .pcD             (D_pc),
                  .pcPlus4D        (D_pcPlus4),
-                 .r1D             (D_r1),
-                 .r2D             (D_r2),
+                 .aD              (D_a),
+                 .bD              (D_b),
                  .immExtD         (D_immExt),
                  .bPredictedTakenD(D_bPredictedTaken),
                  .rdAddrD         (D_rdAddr),
@@ -155,8 +169,10 @@ module core(
                  .funct7_6D       (D_funct7_6),
                  .funct3D         (D_funct3),
                  .aluSrcAD        (D_aluSrcA),
-                 .regSrcD         (D_regSrc),
                  .aluSrcBD        (D_aluSrcB),
+                 .regSrcD         (D_regSrc),
+                 .csrOpD          (D_csrOp),
+                 .csrAddrD        (D_csrAddr),
                  .loadStoreSize   (E_loadStoreSize),
                  .r1Addr          (E_r1Addr),
                  .r2Addr          (E_r2Addr),
@@ -169,10 +185,15 @@ module core(
                  .memWrite        (E_memWrite),
                  .regSrc          (E_regSrc),
                  .btbUpdate       (E_btbUpdate),
+                 .branch          (E_branch),
                  .wrongBranch     (E_wrongBranch),
+                 .controlXfer     (E_controlXfer),
                  .pc              (E_pc),
                  .btbTarget       (E_btbTarget),
-                 .pcSel           (E_pcSel)
+                 .pcSel           (E_pcSel),
+                 .csrAddr         (E_csrAddr),
+                 .csrWrite        (E_csrWrite),
+                 .csrResult       (E_csrResult)
                );
 
   stageMem mem (
@@ -180,6 +201,9 @@ module core(
              .rst            (rst),
              .regSrcE        (E_regSrc),
              .regWriteE      (E_regWrite),
+             .csrWriteE      (E_csrWrite),
+             .csrAddrE       (E_csrAddr),
+             .csrResultE     (E_csrResult),
              .memWriteE      (E_memWrite),
              .aluResultE     (E_aluResult),
              .writeDataE     (E_writeData),
@@ -196,7 +220,11 @@ module core(
              .dmemSize       (M_dmemSize),
              .dmemWdata      (M_dmemWdata),
              .dmemAddr       (M_dmemAddr),
-             .dmemWen        (M_dmemWen)
+             .dmemWen        (M_dmemWen),
+             .csrWrite       (M_csrWrite),
+             .csrResult      (M_csrResult),
+             .csrAddr        (M_csrAddr)
+
            );
 
   stageWback wback (
@@ -208,19 +236,26 @@ module core(
                .aluResultM (M_aluResult),
                .readDataM  (M_readData),
                .pcPlus4M   (M_pcPlus4),
+               .csrResultM (M_csrResult),
+               .csrAddrM   (M_csrAddr),
+               .csrWriteM  (M_csrWrite),
                .regWrite   (W_regWrite),
                .rdAddr     (W_rdAddr),
-               .result     (W_rd)
+               .regResult  (W_rd),
+               .csrResult  (W_csrResult),
+               .csrAddr    (W_csrAddr),
+               .csrWrite   (W_csrWrite)
              );
   branchPredictor bPredict(
-                    .clk        (clk),
-                    .rst        (rst),
-                    .fetchPc (F_pc),
-                    .fetchHit(P_bPredictTaken),
-                    .fetchTarget(P_btbTarget),
-                    .exTaken(E_btbUpdate),
-                    .exTarget(E_btbTarget),
-                    .exPc    (E_pc)
+                    .clk         (clk),
+                    .rst         (rst),
+                    .fetchPc     (F_pc),
+                    .fetchHit    (P_bPredictTaken),
+                    .fetchTarget (P_btbTarget),
+                    .exTaken     (E_btbUpdate),
+                    .exTarget    (E_btbTarget),
+                    .exBranch    (E_branch),
+                    .exPc        (E_pc)
                   );
 
   assign dmemSize  = M_dmemSize;
