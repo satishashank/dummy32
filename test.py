@@ -9,7 +9,7 @@ from cocotb.triggers import RisingEdge
 async def isa_test(dut):
     """Try accessing the design."""
     clk = Clock(dut.clk, 1, "ns")
-    dut.usePredictor.value = 0;
+    dut.usePredictor.value = 1;
     cocotb.start_soon(clk.start())
     writeData = []
     writeAddr = []
@@ -29,7 +29,6 @@ async def isa_test(dut):
                 pass
         if (dut.uut.decode.regF.writeData.value == 0xDEADC0DE):
             break 
-    # if log)
     # for pc,addr,data in zip(writePc,writeAddr,writeData):
     #         msg = f"{hex(pc)},{hex(addr)},{hex(data)}"
     #         cocotb.log.info(msg)
