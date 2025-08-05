@@ -22,7 +22,7 @@ Impact of branch prediction on `benchmark-dhrystone` with `500` iterations and "
 <img width="420" height="320" alt="Btb" src="https://github.com/user-attachments/assets/b5da3240-2326-479a-ac0c-c65d42c747dd" />
 </p>
 
-
+See [dhrystone](./dhrystone) for more details.
 
 
 ## Prerequisites:
@@ -100,7 +100,7 @@ Correct run of the benchmark gives the following output:
 
     Execution starts, 0x000001F4 runs through Dhrystone
     ...
-    
+
     Str_1_Loc:           DHRYSTONE PROGRAM, 1'ST STRING        should be:   DHRYSTONE PROGRAM, 1'ST STRING
 
     Str_2_Loc:           DHRYSTONE PROGRAM, 2'ND STRING        should be:   DHRYSTONE PROGRAM, 2'ND STRING
