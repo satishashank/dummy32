@@ -8,6 +8,8 @@ A 5-stage pipelined RV32I core started as a block diagram from *"Digital Design 
 
 * Runs [benchmark-dhrystone](https://github.com/sifive/benchmark-dhrystone)
 
+* Synthesizeable using [yosys](https://github.com/YosysHQ/yosys)
+
 * Dynamic branch prediction using a Branch Target Buffer (BTB) with 2-bit saturating counters
 
 * Branch predictor can be turned off in the testbench for before and after
@@ -28,7 +30,7 @@ See [dhrystone](./dhrystone) for more details.
 ## Prerequisites:
 The core is simulated using open-source tools which include:
 [Verilator](), [CoCoTB](https://github.com/cocotb/cocotb).
-However, the `Vivado Suite` was used for final linting and synthesizability.
+
 
 The C/asm files to be run are compiled using the standard [riscv-gnu-toolchain](https://github.com/riscv-collab/riscv-gnu-toolchain) with a custom linking script seperating data and code. The generated `elf` is *"hexdumped"* to `code.mem` and `data.mem` [hexdump](https://man7.org/linux/man-pages/man1/hexdump.1.html).
 
