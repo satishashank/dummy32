@@ -17,8 +17,7 @@ A 5-stage pipelined RV32I core started as a block diagram from *"Digital Design 
   
 Increase in throughput% with different buffer sizes on `benchmark-dhrystone` with `500` iterations and "always-taken" as base:
 <p align="center">
-<img width="400" height="275" alt="Predict" src="https://github.com/user-attachments/assets/a3784fd1-89c9-4f0c-be0a-f411327db40f" />
-
+<img width="741" height="555" alt="Btb" src="https://github.com/user-attachments/assets/b5da3240-2326-479a-ac0c-c65d42c747dd" />
 </p>
 
 
