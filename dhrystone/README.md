@@ -5,20 +5,13 @@ Ported from sifive's [benchmark-dhrystone](https://github.com/sifive/benchmark-d
 
 ## Results
 
-Iterations: 500
+**Iterations:** 500
 
-* btb off       |   Cycles:0x0003827D
-
-* btb 16 entry  |    Cycles:0x000372E1
-
-* btb 32 entry | Cycles:0x00035F63
-
-* btb 64 entry  | Cycles:0x00035797
-
-* btb 128 entry | Cycles:0x00034FCB
-
-* btb 256 entry | Cycles:0x0003309B
-
-* btb 512 entry | Cycles:0x000324E9
-
-* btb 1024 entry | Cycles:0x000324E9
+| BTB Size | Total Cycles     | Wrong Branches   | Control Transfers |
+|----------|------------------|------------------|-------------------|
+| Off      | `0x00038281`     | `0x0000520A`     | `0x0000520A`      |
+| 16       | `0x000353B5`     | `0x00003AA4`     | `0x0000520A`      |
+| 32       | `0x00034037`     | `0x000030E5`     | `0x0000520A`      |
+| 64       | `0x00033485`     | `0x00002B0C`     | `0x0000520A`      |
+| 128      | `0x000324ED`     | `0x00002340`     | `0x0000520A`      |
+| 256      | `0x000324ED`     | `0x00002340`     | `0x0000520A`      |
