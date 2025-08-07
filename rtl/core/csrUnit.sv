@@ -45,6 +45,7 @@ module csrUnit (
       begin
         csrReadIn=0;
         csrWriteIn = 0;
+        csrResult = 0;
       end
     endcase
   end
