@@ -1,0 +1,7 @@
+read_verilog -sv ./*.sv
+synth -top core
+opt
+memory_bram
+opt
+techmap
+stat
