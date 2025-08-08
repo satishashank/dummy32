@@ -18,7 +18,10 @@ Ported from sifive's [benchmark-dhrystone](https://github.com/sifive/benchmark-d
 | 128          | 206,703                  | 9,024              | 1.17    | 25.4%                  |
 | 256          | 206,703                  | 9,024              | 1.17    | 25.4%                  |
 
-**Iterations:** 1000  
+**Iterations:** 1000 
+**Instruction Count:** 354,013  
+**Control Transfers:** 70,001  
+
 | **BTB Type**                 | **Total Cycles** | **Wrong Branches** | **CPI** | **Misprediction Rate** |
 |------------------------------|------------------|--------------------|---------|------------------------|
 | Simple 128 BTB               | 413,085          | 18,024             | 1.164   | 25.75%                 |
