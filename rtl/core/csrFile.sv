@@ -12,12 +12,13 @@ module csrFile#(
     input logic clk
   );
 
-  //Read-only csrs for branch prediction
+  //Read-only csrs for metrics
   logic [31:0] csRegisters [regSize-1:0];
   assign csr = csRegisters[readAddr];
 
   always_ff@(posedge clk)
   begin
+    csRegisters[3] <= csRegisters[3] + 1; //cycle count
     if(wEn)
     begin
       csRegisters[wAddr[3:0]] <= wData;

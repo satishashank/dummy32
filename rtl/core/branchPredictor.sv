@@ -1,5 +1,5 @@
 module branchPredictor #(
-    parameter int BTB_ENTRIES    = 64,
+    parameter int BTB_ENTRIES    = 128,
     parameter int TARGET_WIDTH   = 32,
     parameter int COUNTER_WIDTH  = 2,
     parameter int INDEX_WIDTH    = $clog2(BTB_ENTRIES),
@@ -52,16 +52,17 @@ module branchPredictor #(
   assign fetchCounter = fetchEntry[COUNTER_MSB:COUNTER_LSB];
   assign exCounter    = exEntry_[COUNTER_MSB:COUNTER_LSB];
 
-  assign fetchHit    = fetchEntry[VALID_BIT] && (fetchTagBtb == fetchTag) && fetchCounter[1];
+  assign fetchHit    = fetchEntry[VALID_BIT] && (fetchTagBtb == fetchTag) && fetchCounter[0];
   assign fetchTarget = fetchEntry[TARGET_MSB:TARGET_LSB];
   assign exHit       = exEntry_[VALID_BIT] && (exTagBtb == exTag);
   assign count       = exCounter;
 
   localparam [1:0]
-             sNtaken = 2'b00,
-             wNtaken = 2'b01,
-             wTaken  = 2'b10,
-             sTaken  = 2'b11;
+             sNtaken = 2'b10,
+             wNtaken = 2'b00, //default not taken
+             wTaken = 2'b01,
+             sTaken = 2'b11;
+
 
   always_comb
   begin

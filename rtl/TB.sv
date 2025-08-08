@@ -30,14 +30,8 @@ module TB;
   assign uartData = dmemWdata[7:0];
   assign uartWen = dmemWen&(dmemAddr == 32'hFFFF_FFFC);
 
-  assign counterCntrl = (dmemAddr == 32'hFFFFFFF4);
-  assign counterRegAccess = (dmemAddr == 32'hFFFFFFF8);
-
-  assign counterTurnOn = counterCntrl&(dmemWdata == 32'hAFA51A91);
-  assign counterTurnOff = counterCntrl&(dmemWdata == 32'hAFA5109);
-
-  assign dmemWenFinal = dmemWen&&(!uartWen&!counterCntrl);
-  assign dmemRdataFinal = counterRegAccess?counterCount:dmemRdata;
+  assign dmemWenFinal = dmemWen&&(!uartWen);
+  assign dmemRdataFinal = dmemRdata;
 
 
 
@@ -75,13 +69,6 @@ module TB;
             .data(uartData),
             .wEn(uartWen)
           );
-  cycleCounter cCounter(.clk(clk),
-                        .rst(rst),
-                        .turnOn(counterTurnOn),
-                        .turnOff(counterTurnOff),
-                        .count(counterCount)
-                       );
-
   initial
   begin
     $dumpfile("");

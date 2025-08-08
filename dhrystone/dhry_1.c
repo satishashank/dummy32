@@ -19,7 +19,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#define DHRY_ITERS 500
+#define DHRY_ITERS 1000
 
 /* Global Variables: */
 
@@ -163,14 +163,14 @@ main()
   /***************/
   /* Start timer */
   /***************/
-  uint32_t wrongBranches0, controlXfer0, wrongBranches1, controlXfer1, N_instructions0, N_instructions1;
+  uint32_t wrongBranches0, controlXfer0, timer0, wrongBranches1, controlXfer1, N_instructions0, N_instructions1, timer1, User_Cycles;
 
 #ifdef TIMES
   asm volatile("csrr %0, 0x80" : "=r"(wrongBranches0));
   asm volatile("csrr %0, 0x81" : "=r"(controlXfer0));
   asm volatile("csrr %0, 0x82" : "=r"(N_instructions0));
+  asm volatile("csrr %0, 0x83" : "=r"(timer0));
 
-  start_timer();
 #endif
 
   for (Run_Index = 1; Run_Index <= Number_Of_Runs; ++Run_Index)
@@ -225,10 +225,11 @@ main()
   asm volatile("csrr %0, 0x80" : "=r"(wrongBranches1));
   asm volatile("csrr %0, 0x81" : "=r"(controlXfer1));
   asm volatile("csrr %0, 0x82" : "=r"(N_instructions1));
-  stop_timer();
+  asm volatile("csrr %0, 0x83" : "=r"(timer1));
+  User_Cycles = timer1 - timer0;
 
 #ifdef TIMES
-  User_Cycles = read_timer();
+  // User_Cycles = read_timer();
 #endif
 #ifdef TIME
   End_Time = time((long *)0);

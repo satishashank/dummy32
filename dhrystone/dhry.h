@@ -347,27 +347,27 @@
 /* Compiler and system dependent definitions: */
 #define TIMES // Use custom tick timer instead of <sys/times.h>
 // Memory-mapped 32-bit timer address (change if needed)
-#define TIMER_ADDR ((volatile unsigned int *)0xFFFFFFF8)
-#define TIMER_REG_ADDR ((volatile unsigned int *)0xFFFFFFF4)
+// #define TIMER_ADDR ((volatile unsigned int *)0xFFFFFFF8)
+// #define TIMER_REG_ADDR ((volatile unsigned int *)0xFFFFFFF4)
 // Timer type
-typedef unsigned int Timer_Tick_Type;
+// typedef unsigned int Timer_Tick_Type;
 
 // Read timer value
-static inline Timer_Tick_Type read_timer(void)
-{
-        return *TIMER_ADDR;
-}
+// static inline Timer_Tick_Type read_timer(void)
+// {
+//         return *TIMER_ADDR;
+// }
 
-static inline uint32_t start_timer(void)
-{
-        *(TIMER_REG_ADDR) = 0xAFA51A91;
-}
-static inline void stop_timer(void)
-{
-        *(TIMER_REG_ADDR) = 0xAFA51091;
-}
-// Globals for Dhrystone measurement
-static Timer_Tick_Type User_Cycles;
+// static inline uint32_t start_timer(void)
+// {
+//         *(TIMER_REG_ADDR) = 0xAFA51A91;
+// }
+// static inline void stop_timer(void)
+// {
+//         *(TIMER_REG_ADDR) = 0xAFA51091;
+// }
+// // Globals for Dhrystone measurement
+// static Timer_Tick_Type User_Cycles;
 
 #ifdef NOSTRUCTASSIGN
 #define structassign(d, s) memcpy(&(d), &(s), sizeof(d))
