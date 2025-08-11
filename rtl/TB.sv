@@ -20,11 +20,6 @@ module TB;
   logic [31:0] dmemAddr;
   logic uartWen;
   logic [7:0] uartData;
-  logic counterCntrl;
-  logic counterRegAccess;
-  logic counterTurnOn;
-  logic counterTurnOff;
-  logic [31:0]counterCount;
 
 
   assign uartData = dmemWdata[7:0];
