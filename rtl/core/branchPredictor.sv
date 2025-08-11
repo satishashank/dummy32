@@ -58,10 +58,10 @@ module branchPredictor #(
   assign count       = exCounter;
 
   localparam [1:0]
-             sNtaken = 2'b10,
-             wNtaken = 2'b00, //default not taken
-             wTaken = 2'b01,
-             sTaken = 2'b11;
+             sTaken = 2'b10,
+             wTaken = 2'b00, //default taken
+             wNtaken = 2'b01,
+             sNtaken = 2'b11;
 
 
   always_comb
