@@ -19,7 +19,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#define DHRY_ITERS 1000
+#define DHRY_ITERS 500
 
 /* Global Variables: */
 
@@ -238,7 +238,7 @@ main()
   End_Time = clock();
 #endif
 
-  uart_puts("Execution end s\n");
+  uart_puts("Execution ends\n");
   uart_putc('\n');
 
   uart_puts("Final values of the variables used in the benchmark:");
