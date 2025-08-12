@@ -43,3 +43,13 @@ int __mulsi3(int a, int b)
 
     return (int)ur;
 }
+unsigned __umodsi3(unsigned a, unsigned b)
+{
+    if (b == 0)
+        return 0; // avoid div by zero
+    while (a >= b)
+    {
+        a -= b;
+    }
+    return a;
+}

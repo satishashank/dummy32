@@ -19,7 +19,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#define DHRY_ITERS 500
+#define DHRY_ITERS 5
 
 /* Global Variables: */
 
@@ -78,6 +78,30 @@ void uart_puts(const char *str)
   }
 }
 
+void uart_putint(uint32_t val)
+{
+  char buf[11]; // max 10 digits + null
+  int i = 0;
+
+  if (val == 0)
+  {
+    uart_putc('0');
+    return;
+  }
+
+  while (val > 0)
+  {
+    uint32_t digit = __umodsi3(val, 10);
+    buf[i++] = '0' + digit;
+    val = __divsi3(val, 10);
+  }
+
+  while (i > 0)
+  {
+    uart_putc(buf[--i]);
+  }
+}
+
 void uart_puthex(unsigned int val)
 {
   uart_puts("0x");
@@ -90,7 +114,12 @@ void uart_puthex(unsigned int val)
     shift -= 4;
   }
 }
-void uart_putsi(const char *str, unsigned int val)
+void uart_putsi(const char *str, int val)
+{
+  uart_puts(str);
+  uart_putint(val);
+}
+void uart_putsh(const char *str, int val)
 {
   uart_puts(str);
   uart_puthex(val);
@@ -270,37 +299,37 @@ main()
   uart_putc('\n');
 
   uart_puts("Ptr_Glob->\n");
-  uart_putsi("  Ptr_Comp:          ", (int)Ptr_Glob->Ptr_Comp);
+  uart_putsh("  Ptr_Comp:          ", (int)Ptr_Glob->Ptr_Comp);
   uart_puts("        should be:   (implementation-dependent)\n");
-  uart_putsi("  Discr:             ", Ptr_Glob->Discr);
-  uart_putsi("        should be:   ", 0);
+  uart_putsh("  Discr:             ", Ptr_Glob->Discr);
+  uart_putsh("        should be:   ", 0);
   uart_putc('\n');
 
-  uart_putsi("  Enum_Comp:         ", Ptr_Glob->variant.var_1.Enum_Comp);
-  uart_putsi("        should be:   ", 2);
+  uart_putsh("  Enum_Comp:         ", Ptr_Glob->variant.var_1.Enum_Comp);
+  uart_putsh("        should be:   ", 2);
   uart_putc('\n');
 
-  uart_putsi("  Int_Comp:          ", Ptr_Glob->variant.var_1.Int_Comp);
-  uart_putsi("        should be:   ", 17);
+  uart_putsh("  Int_Comp:          ", Ptr_Glob->variant.var_1.Int_Comp);
+  uart_putsh("        should be:   ", 17);
   uart_putc('\n');
 
   uart_puts("  Str_Comp:          ");
   uart_puts(Ptr_Glob->variant.var_1.Str_Comp);
   uart_puts("        should be:   DHRYSTONE PROGRAM, SOME STRING\n");
   uart_puts("Next_Ptr_Glob->\n");
-  uart_putsi("  Ptr_Comp:          ", (int)Next_Ptr_Glob->Ptr_Comp);
+  uart_putsh("  Ptr_Comp:          ", (int)Next_Ptr_Glob->Ptr_Comp);
   uart_puts("        should be:   (implementation-dependent), same as above\n");
 
-  uart_putsi("  Discr:             ", Next_Ptr_Glob->Discr);
-  uart_putsi("        should be:   ", 0);
+  uart_putsh("  Discr:             ", Next_Ptr_Glob->Discr);
+  uart_putsh("        should be:   ", 0);
   uart_putc('\n');
 
-  uart_putsi("  Enum_Comp:         ", Next_Ptr_Glob->variant.var_1.Enum_Comp);
-  uart_putsi("        should be:   ", 1);
+  uart_putsh("  Enum_Comp:         ", Next_Ptr_Glob->variant.var_1.Enum_Comp);
+  uart_putsh("        should be:   ", 1);
   uart_putc('\n');
 
-  uart_putsi("  Int_Comp:          ", Next_Ptr_Glob->variant.var_1.Int_Comp);
-  uart_putsi("        should be:   ", 18);
+  uart_putsh("  Int_Comp:          ", Next_Ptr_Glob->variant.var_1.Int_Comp);
+  uart_putsh("        should be:   ", 18);
   uart_putc('\n');
 
   uart_puts("  Str_Comp:          ");
@@ -341,16 +370,50 @@ main()
   }
   else
   {
-    uart_putsi("Total Cycles:                          ", User_Cycles);
+    uint32_t wrongBranches = wrongBranches1 - wrongBranches0;
+    uint32_t controlXfers = controlXfer1 - controlXfer0;
+    uint32_t instructions = N_instructions1 - N_instructions0;
+
+    // CPI * 1000 (fixed point, 3 decimal places)
+    uint32_t cpi_times_1000 = __divsi3(__mulsi3(User_Cycles, 1000), instructions);
+
+    // Misprediction rate * 1000 (fixed point, 3 decimal places)
+    uint32_t miss_times_1000 = 0;
+    if (controlXfers != 0)
+      miss_times_1000 = __divsi3(__mulsi3(wrongBranches, 1000), controlXfers);
+
+    // Print table in decimal
+    uart_puts("Total Cycles (dec):        ");
+    uart_putint(User_Cycles);
     uart_putc('\n');
-    uart_putsi("Number of Wrong branches:              ", (wrongBranches1 - wrongBranches0));
+    uart_puts("Number of Control Xfers:   ");
+    uart_putint(controlXfers);
     uart_putc('\n');
-    uart_putsi("Number of Control Xfers:               ", (controlXfer1 - controlXfer0));
+    uart_puts("Number of Instructions:    ");
+    uart_putint(instructions);
     uart_putc('\n');
-    uart_putsi("Number of Instructions:                ", (N_instructions1 - N_instructions0));
+    uart_puts("Wrong Branches:            ");
+    uart_putint(wrongBranches);
     uart_putc('\n');
+
+    uart_puts("CPI:                       ");
+    uart_putint(__divsi3(cpi_times_1000, 1000)); // integer part
+    uart_putc('.');
+    uint32_t cpi_frac = __umodsi3(cpi_times_1000, 1000);
+    if (cpi_frac < 100)
+      uart_putc('0');
+    if (cpi_frac < 10)
+      uart_putc('0');
+    uart_putint(cpi_frac);
     uart_putc('\n');
+
+    uart_puts("Misprediction Rate (%):    ");
+    uart_putint(__divsi3(miss_times_1000, 10)); // integer part in %
+    uart_putc('.');
+    uint32_t miss_frac = __umodsi3(miss_times_1000, 10);
+    uart_putint(miss_frac);
     uart_putc('\n');
+    uart_puts("Done.\n");
   }
 }
 
