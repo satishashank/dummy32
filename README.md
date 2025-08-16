@@ -30,7 +30,7 @@ The core is simulated using open-source tools which include:
 [Verilator](), [CoCoTB](https://github.com/cocotb/cocotb).
 
 
-The C/asm files to be run are compiled using the standard [riscv-gnu-toolchain](https://github.com/riscv-collab/riscv-gnu-toolchain) with a custom linking script seperating data and code. The generated `elf` is *"hexdumped"* to `code.mem` and `data.mem` [hexdump](https://man7.org/linux/man-pages/man1/hexdump.1.html).
+The C/asm files to be run are compiled using the standard [riscv-gnu-toolchain](https://github.com/riscv-collab/riscv-gnu-toolchain) with a custom linking script seperating data and code. The code and data sections from generated `elf` are *"hexdumped"* to `code.mem` and `data.mem` [hexdump](https://man7.org/linux/man-pages/man1/hexdump.1.html).
 
 ## Simulation and executing C on the core
 As mentioned, a combination of `Verilator` and `CoCoTB` is used for simulation, debugging, and logging. The core copies the generated `code.mem` to the instruction memory for execution, and the `Makefile` streamlines this process.
@@ -87,7 +87,7 @@ The `dhrystone` folder is ported from `benchmark-dhrystone` and uses newly defin
  
 Similar to `riscv-tests` running `make` inside the `dhrystone` folder dumps out the `elf` in the root folder. 
 
-The test uses cycle count instead of time since this a simulation enviornment. This is done using a csr-based counter `cycleCounter` which is turned ON at startup.The C code uses inline assembly for reading this csr.Additionally, the benchmark also logs out the number of wrong branches and the control transfers to gauge the branch-predictor's accuracy.
+The test uses cycle count instead of time since this a simulation enviornment. This is done using a csr-based counter which is turned ON at startup.The C code uses inline assembly for reading this csr.Additionally, the benchmark also logs out the number of wrong branches and the control transfers to gauge the branch-predictor's accuracy.
 
 Number of iterations can be changed from the C code and defaults to `500`. The minimum number of clock cycles to log out cycle count is kept at `1000`.
 
