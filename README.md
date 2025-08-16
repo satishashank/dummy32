@@ -87,7 +87,7 @@ The `dhrystone` folder is ported from `benchmark-dhrystone` and uses newly defin
  
 Similar to `riscv-tests` running `make` inside the `dhrystone` folder dumps out the `elf` in the root folder. 
 
-The test uses cycle count instead of time since this a simulation enviornment. This is done using a memory-mapped counter `cycleCounter` which is turned ON from a specifc write of `0xAFA51A91` at` 0xFFFFFFF4`. The C code uses function `start_timer`, `stop-timer`and `read-timer` for easy-use (see `dhry.h`).Additionally, the benchmark also logs out the number of wrong branches and the number of control transfers to gauge the branch-predictor's accuracy.
+The test uses cycle count instead of time since this a simulation enviornment. This is done using a csr-based counter `cycleCounter` which is turned ON at startup.The C code uses inline assembly for reading this csr.Additionally, the benchmark also logs out the number of wrong branches and the control transfers to gauge the branch-predictor's accuracy.
 
 Number of iterations can be changed from the C code and defaults to `500`. The minimum number of clock cycles to log out cycle count is kept at `1000`.
 
