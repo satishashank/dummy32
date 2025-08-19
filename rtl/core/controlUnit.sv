@@ -18,8 +18,8 @@ module controlUnit (
   logic wrongOpcode;
   assign shift = (!funct3[1])&(funct3[0]);
   assign aluSrcB = (!branch)&(|immCntrl); //branch uses pcPlusImm and rs2
-  localparam [4:
-              0]
+
+  localparam [4:0]
              OPCODE_RTYPE  = 5'b01100,
              OPCODE_IARTHTYPE  = 5'b00100,
              OPCODE_LOADTYPE  = 5'b00000,
@@ -30,8 +30,7 @@ module controlUnit (
              OPCODE_JAL    = 5'b11011,
              OPCODE_JALR   = 5'b11001,
              OPCODE_CSR = 5'b11100;
-  localparam [2:
-              0]
+  localparam [2:0]
              IMM_TYPE_DEFAULT = 3'b000, //No imm val
              IMM_TYPE_SHAMT   = 3'b001,
              IMM_TYPE_I    = 3'b010,
@@ -39,8 +38,7 @@ module controlUnit (
              IMM_TYPE_B    = 3'b100,
              IMM_TYPE_U    = 3'b101,
              IMM_TYPE_J    = 3'b110;
-  localparam [1:
-              0]
+  localparam [1:0]
              ALU_SRC = 2'b00,
              MEM_SRC = 2'b01,
              PC_SRC = 2'b10;

@@ -14,7 +14,8 @@ module stageDecode (
     input logic [31:0] rdW,
     output logic [4:0] rdAddr,r1Addr,r2Addr,
     output logic bPredictedTaken,
-    output logic regWrite,memWrite,branch,jump,useF7,useRegAdd,funct7_6,
+    output logic regWrite,memWrite,branch,jump,useF7,useRegAdd,
+    output logic [1:0] funct7_60,
     output logic [11:0] csrAddr,
     output logic [31:0] pc,pcPlus4,a,b,immExt,
     output logic [2:0] funct3,
@@ -46,7 +47,7 @@ module stageDecode (
   assign r2Addr = instrSv[24:20];
   assign op = instrSv[6:2];
   assign funct3 = instrSv[14:12];
-  assign funct7_6 = instrSv[30];
+  assign funct7_60 = {instrSv[30],instrSv[25]};
   assign immSrc = instrSv[31:7];
   assign bPredictedTaken = bPredictedTakenSv;
 

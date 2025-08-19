@@ -12,7 +12,8 @@ module stageExecute (
     input logic bPredictedTakenD,
     input logic [4:0] rdAddrD,r1AddrD,r2AddrD,
     input logic [11:0] csrAddrD,
-    input logic regWriteD,memWriteD,branchD,jumpD,useF7D,useRegAddD,funct7_6D,
+    input logic regWriteD,memWriteD,branchD,jumpD,useF7D,useRegAddD,
+    input logic [1:0] funct7_60D,
     input logic [2:0] funct3D,
     input logic [1:0] aluSrcAD,regSrcD,
     input logic aluSrcBD,
@@ -30,7 +31,8 @@ module stageExecute (
   logic bPredictedTakenSv;
   logic [4:0] rdAddrSv,r1AddrSv,r2AddrSv;
   logic [31:0] pcSv,pcPlus4Sv;
-  logic regWriteSv,memWriteSv,branchSv,jumpSv,useF7Sv,useRegAddSv,funct7_6Sv,csrOpSv;
+  logic regWriteSv,memWriteSv,branchSv,jumpSv,useF7Sv,useRegAddSv,csrOpSv;
+  logic [1:0] funct7_60Sv;
   logic [11:0] csrAddrSv;
   logic [31:0] aSv,bSv,immExtSv;
   logic [2:0] funct3Sv;
@@ -40,8 +42,9 @@ module stageExecute (
   //Internal signals
   logic [31:0] a,b,r1Hz,r2Hz,srcA,srcB,pcPlusImm,immExt;
   logic [2:0] funct3;
-  logic [1:0] aluSrcA;
-  logic jump,funct7_6,branchFlag,isJalr,useRegAdd,bPredictedTaken,useF7,csrRead,aluSrcB;
+  logic [1:0] aluSrcA,funct7_60;
+  logic jump,branchFlag,isJalr,useRegAdd,bPredictedTaken,useF7,csrRead,aluSrcB;
+
 
 
   assign a = aSv;
@@ -62,7 +65,7 @@ module stageExecute (
   assign aluSrcB = aluSrcBSv;
   assign regSrc = regSrcSv;
   assign funct3 = funct3Sv;
-  assign funct7_6 = funct7_6Sv;
+  assign funct7_60 = funct7_60Sv;
   assign useF7 = useF7Sv;
   assign bPredictedTaken = bPredictedTakenSv;
 
@@ -131,7 +134,7 @@ module stageExecute (
   alu alu (
         .funct3(funct3),
         .useF7(useF7),
-        .funct7_6(funct7_6),
+        .funct7_60(funct7_60),
         .csrOp(csrOpSv),
         .useRegAdd(useRegAdd),
         .srcA(srcA),
@@ -165,7 +168,7 @@ module stageExecute (
 
       funct3Sv <= 0;
       useF7Sv    <= 0;
-      funct7_6Sv <= 0;
+      funct7_60Sv <= 0;
       regWriteSv <= 0;
       memWriteSv <= 0;
       branchSv <=   0;
@@ -192,7 +195,7 @@ module stageExecute (
       pcSv <= pcD;
       funct3Sv <= funct3D;
       useF7Sv    <= useF7D;
-      funct7_6Sv <= funct7_6D;
+      funct7_60Sv <= funct7_60D;
       regWriteSv <= regWriteD;
       memWriteSv <= memWriteD;
       branchSv <=   branchD;

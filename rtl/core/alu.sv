@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 module alu(input logic [2:0] funct3,
-             input logic funct7_6,
+             input logic [1:0] funct7_60,
              input logic branch,
              input logic csrOp,
              input logic useF7,
@@ -22,7 +22,7 @@ module alu(input logic [2:0] funct3,
   begin
     aluCntrl = funct3;
     inv = 0;
-    f7 = useF7&funct7_6;
+    f7 = useF7&funct7_60[1];
     if(branch)
     begin
       aluCntrl = {1'b0,funct3[2:1]};
