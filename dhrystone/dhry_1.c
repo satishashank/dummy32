@@ -19,7 +19,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#define DHRY_ITERS 5
+#define DHRY_ITERS 500
 
 /* Global Variables: */
 
@@ -185,7 +185,7 @@ main()
   uart_putc('\n');
 #endif
 
-  uart_putsi("Execution starts, ", Number_Of_Runs);
+  uart_putsh("Execution starts, ", Number_Of_Runs);
   uart_puts(" runs through Dhrystone");
   uart_putc('\n');
 
@@ -272,11 +272,11 @@ main()
 
   uart_puts("Final values of the variables used in the benchmark:");
   uart_putc('\n');
-  uart_putsi("Int_Glob:            ", Int_Glob);
-  uart_putsi("        should be:   ", 5);
+  uart_putsh("Int_Glob:            ", Int_Glob);
+  uart_putsh("        should be:   ", 5);
   uart_putc('\n');
-  uart_putsi("Bool_Glob:           ", Bool_Glob);
-  uart_putsi("        should be:   ", 1);
+  uart_putsh("Bool_Glob:           ", Bool_Glob);
+  uart_putsh("        should be:   ", 1);
   uart_putc('\n');
   uart_puts("Ch_1_Glob:           ");
   uart_putc(Ch_1_Glob);
@@ -290,11 +290,11 @@ main()
   uart_putc('B');
   uart_putc('\n');
 
-  uart_putsi("Arr_1_Glob[8]:       ", Arr_1_Glob[8]);
-  uart_putsi("        should be:   ", 7);
+  uart_putsh("Arr_1_Glob[8]:       ", Arr_1_Glob[8]);
+  uart_putsh("        should be:   ", 7);
   uart_putc('\n');
 
-  uart_putsi("Arr_2_Glob[8][7]:    ", Arr_2_Glob[8][7]);
+  uart_putsh("Arr_2_Glob[8][7]:    ", Arr_2_Glob[8][7]);
   uart_puts("        should be:   Number_Of_Runs + 10\n");
   uart_putc('\n');
 
@@ -336,20 +336,20 @@ main()
   uart_puts(Next_Ptr_Glob->variant.var_1.Str_Comp);
   uart_puts("        should be:   DHRYSTONE PROGRAM, SOME STRING\n");
   uart_putc('\n');
-  uart_putsi("Int_1_Loc:           ", Int_1_Loc);
-  uart_putsi("        should be:   ", 5);
+  uart_putsh("Int_1_Loc:           ", Int_1_Loc);
+  uart_putsh("        should be:   ", 5);
   uart_putc('\n');
 
-  uart_putsi("Int_2_Loc:           ", Int_2_Loc);
-  uart_putsi("        should be:   ", 13);
+  uart_putsh("Int_2_Loc:           ", Int_2_Loc);
+  uart_putsh("        should be:   ", 13);
   uart_putc('\n');
 
-  uart_putsi("Int_3_Loc:           ", Int_3_Loc);
-  uart_putsi("        should be:   ", 7);
+  uart_putsh("Int_3_Loc:           ", Int_3_Loc);
+  uart_putsh("        should be:   ", 7);
   uart_putc('\n');
 
-  uart_putsi("Enum_Loc:            ", Enum_Loc);
-  uart_putsi("        should be:   ", 1);
+  uart_putsh("Enum_Loc:            ", Enum_Loc);
+  uart_putsh("        should be:   ", 1);
   uart_putc('\n');
 
   uart_puts("Str_1_Loc:           ");
@@ -374,45 +374,46 @@ main()
     uint32_t controlXfers = controlXfer1 - controlXfer0;
     uint32_t instructions = N_instructions1 - N_instructions0;
 
-    // CPI * 1000 (fixed point, 3 decimal places)
-    uint32_t cpi_times_1000 = __divsi3(__mulsi3(User_Cycles, 1000), instructions);
+    // When M-ext
+    //  // CPI * 1000 (fixed point, 3 decimal places)
+    //  uint32_t cpi_times_1000 = __divsi3(__mulsi3(User_Cycles, 1000), instructions);
 
-    // Misprediction rate * 1000 (fixed point, 3 decimal places)
-    uint32_t miss_times_1000 = 0;
-    if (controlXfers != 0)
-      miss_times_1000 = __divsi3(__mulsi3(wrongBranches, 1000), controlXfers);
+    // // Misprediction rate * 1000 (fixed point, 3 decimal places)
+    // uint32_t miss_times_1000 = 0;
+    // if (controlXfers != 0)
+    //   miss_times_1000 = __divsi3(__mulsi3(wrongBranches, 1000), controlXfers);
 
-    // Print table in decimal
-    uart_puts("Total Cycles (dec):        ");
-    uart_putint(User_Cycles);
+    // Print table
+    uart_puts("Total Cycles:              ");
+    uart_puthex(User_Cycles);
     uart_putc('\n');
     uart_puts("Number of Control Xfers:   ");
-    uart_putint(controlXfers);
+    uart_puthex(controlXfers);
     uart_putc('\n');
     uart_puts("Number of Instructions:    ");
-    uart_putint(instructions);
+    uart_puthex(instructions);
     uart_putc('\n');
     uart_puts("Wrong Branches:            ");
-    uart_putint(wrongBranches);
+    uart_puthex(wrongBranches);
     uart_putc('\n');
 
-    uart_puts("CPI:                       ");
-    uart_putint(__divsi3(cpi_times_1000, 1000)); // integer part
-    uart_putc('.');
-    uint32_t cpi_frac = __umodsi3(cpi_times_1000, 1000);
-    if (cpi_frac < 100)
-      uart_putc('0');
-    if (cpi_frac < 10)
-      uart_putc('0');
-    uart_putint(cpi_frac);
-    uart_putc('\n');
+    // uart_puts("CPI:                       ");
+    // uart_putint(__divsi3(cpi_times_1000, 1000)); // integer part
+    // uart_putc('.');
+    // uint32_t cpi_frac = __umodsi3(cpi_times_1000, 1000);
+    // if (cpi_frac < 100)
+    //   uart_putc('0');
+    // if (cpi_frac < 10)
+    //   uart_putc('0');
+    // uart_puthex(cpi_frac);
+    // uart_putc('\n');
 
-    uart_puts("Misprediction Rate (%):    ");
-    uart_putint(__divsi3(miss_times_1000, 10)); // integer part in %
-    uart_putc('.');
-    uint32_t miss_frac = __umodsi3(miss_times_1000, 10);
-    uart_putint(miss_frac);
-    uart_putc('\n');
+    // uart_puts("Misprediction Rate (%):    ");
+    // uart_puthex(__divsi3(miss_times_1000, 10)); // integer part in %
+    // uart_putc('.');
+    // uint32_t miss_frac = __umodsi3(miss_times_1000, 10);
+    // uart_puthex(miss_frac);
+    // uart_putc('\n');
     uart_puts("Done.\n");
   }
 }
