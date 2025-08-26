@@ -5,7 +5,8 @@ module stageExecute (
     input logic flush,
     input logic csrOpD,
     input logic [1:0] fwdA,fwdB,
-    input logic [31:0] aluResultM,
+    input logic [1:0] regSrcM2,regSrcM1,
+    input logic [31:0] aluResultM1,aluResultM2,readDataM2,pcPlus4M2,pcPlus4M1,
     input logic [31:0] resultW,
     input logic [31:0] pcD,pcPlus4D,
     input logic [31:0] aD,bD,immExtD,
@@ -70,18 +71,38 @@ module stageExecute (
   assign writeData = r2Hz;
   assign csrAddr = csrAddrSv;
 
-
-
   //HAZARD MUX
+  localparam [1:0]
+             NO_FWD = 2'b00,
+             MEM1_FWD = 2'b10,
+             MEM2_FWD = 2'b11,
+             WB_FWD = 2'b01
+             ;
+  localparam [1:
+              0]
+             ALU_SRC = 2'b00,
+             MEM_SRC = 2'b01,
+             PC_SRC = 2'b10;
   always_comb
   begin
     case (fwdA)
-      2'b00:
+      NO_FWD:
         r1Hz = a; //No fwd
-      2'b10:
-        r1Hz = aluResultM; //Mem fwd
-      2'b01:
-        r1Hz = resultW; //Write Back fwd
+      MEM1_FWD:
+        r1Hz = regSrcM1[1]?pcPlus4M1:aluResultM1; //Mem1 fwd
+      MEM2_FWD:
+      case (regSrcM2)
+        ALU_SRC:
+          r1Hz = aluResultM2;
+        PC_SRC:
+          r1Hz = pcPlus4M2;
+        MEM_SRC:
+          r1Hz = readDataM2;
+        default:
+          r1Hz = aluResultM2;
+      endcase
+      WB_FWD:
+        r1Hz = resultW;
       default:
         r1Hz = a; //No fwd
     endcase
@@ -89,12 +110,23 @@ module stageExecute (
   always_comb
   begin
     case (fwdB)
-      2'b00:
+      NO_FWD:
         r2Hz = b; //No fwd
-      2'b10:
-        r2Hz = aluResultM; //Mem fwd
-      2'b01:
-        r2Hz = resultW; //Write Back fwd
+      MEM1_FWD:
+        r2Hz = regSrcM1[1]?pcPlus4M1:aluResultM1; //Mem1 fwd
+      MEM2_FWD:
+      case (regSrcM2)
+        ALU_SRC:
+          r2Hz = aluResultM2;
+        PC_SRC:
+          r2Hz = pcPlus4M2;
+        MEM_SRC:
+          r2Hz = readDataM2;
+        default:
+          r2Hz = aluResultM2;
+      endcase
+      WB_FWD:
+        r2Hz = resultW;
       default:
         r2Hz = b; //No fwd
     endcase

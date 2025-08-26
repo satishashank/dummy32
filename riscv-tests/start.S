@@ -99,7 +99,11 @@ HALT:
 # void uart_putchar(char c)
 .balign 4
 uart_putchar:
-	la t2, 0xFFFFFFFC
-    sw a0, 0(t2) # do the real work
-	ret
+    la   t1, 0xFFFFFFF8      # UART_STATUS addr
+1:  lw   t0, 0(t1)           # load status
+    andi t0, t0, 1           # mask TXFULL bit
+    bnez t0, 1b              # if full, spin
+    la   t2, 0xFFFFFFFC      # UART_TX addr
+    sb   a0, 0(t2)           # write char
+    ret
 .balign 4

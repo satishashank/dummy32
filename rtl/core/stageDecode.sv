@@ -55,6 +55,7 @@ module stageDecode (
   assign pcPlus4 = pcPlus4Sv;
   controlUnit cntrlU(
                 .op(op),
+                .rst(rst),
                 .funct3(funct3[1:0]),
                 .regWrite(regWrite),
                 .memWrite(memWrite),

@@ -6,13 +6,14 @@ module stageInstFetch (
     input logic bPredictTaken,
     input logic usePredictor,
     input logic pcSelE,
-    input logic wrongBranchE,
+    input logic flushF2, //took a wrong branch from exec
     input logic stall,
     input logic [31:0] btbTarget,
     input logic [31:0] pcTargetE,
 
     output logic [31:0] imemAddr,
     input logic [31:0] imemData,
+    output logic imemRen,
 
     output logic [31:0] instr,
     output logic [31:0] pcPlus4,
@@ -20,28 +21,31 @@ module stageInstFetch (
     output logic bPredictedTaken
   );
 
-  logic [31:0] pc_;
+  logic [31:0] pcSv1,pcSv2,pcPlus4Sv1,pcPlus4Sv2,pcIp;
 
-  assign pcPlus4 = pc + 4;
-  assign imemAddr = pc;
-  assign instr = imemData; //imm data
+  assign pcPlus4Sv1 = pcSv1 + 4;
+  assign imemAddr = pcSv1;
+  assign imemRen = !rst;
+  assign instr = !flushF2?imemData:0; //imm data 1 cylce delay
   assign bPredictedTaken = usePredictor&bPredictTaken;
+  assign pc = pcSv2;
+  assign pcPlus4 = pcPlus4Sv2;
 
   always_comb
   begin
     if(usePredictor)
     begin
-      case ({wrongBranchE,bPredictTaken})
+      case ({flushF2,bPredictTaken}) //check branches
         2'b10,2'b11:
-          pc_ = pcTargetE;
+          pcIp = pcTargetE;
         2'b01:
-          pc_ = btbTarget;
+          pcIp = btbTarget;
         default:
-          pc_ = pcPlus4;
+          pcIp = pcPlus4Sv1;
       endcase
     end
     else
-      pc_ = pcSelE?pcTargetE:pcPlus4;
+      pcIp = pcSelE?pcTargetE:pcPlus4Sv1;
   end
 
 
@@ -50,13 +54,25 @@ module stageInstFetch (
   begin
     if (rst)
     begin
-      pc <= 0;
+      pcSv2 <= 0;
+      pcPlus4Sv2 <= 0;
+      pcSv1 <= 0;
     end
     else
     begin
       if (!stall)
       begin : PCreg
-        pc <= pc_;
+        pcSv1 <= pcIp;
+        if (flushF2)
+        begin
+          pcSv2 <= 0;
+          pcPlus4Sv2 <= 0;
+        end
+        else
+        begin
+          pcSv2 <= pcSv1;
+          pcPlus4Sv2 <= pcPlus4Sv1;
+        end
       end
     end
   end
