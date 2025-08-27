@@ -1,13 +1,14 @@
 module imem #(
-    parameter DEPTH = 16383  //16K for now
+    parameter DEPTH = 16  //16K for now
   )(
     input logic rEn,oEn,
     output logic [31:0] rData,
     input logic [31:0] rAddr,
     input logic clk
   );
-  localparam ADDR_WIDTH = $clog2(DEPTH);
-  logic [31:0] mem [0:DEPTH-1];
+  localparam ENTRIES = DEPTH*1024;
+  localparam ADDR_WIDTH = $clog2(ENTRIES);
+  logic [31:0] mem [0:ENTRIES-1];
 
   always_ff@(posedge clk)
   begin
