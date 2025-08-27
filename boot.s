@@ -2,6 +2,9 @@
 .global _start
 
 _start:
+    nop
+    nop
+    nop
     li sp, 0x10003FFC
     call main
 HALT:

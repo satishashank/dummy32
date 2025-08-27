@@ -6,7 +6,7 @@ module soc (
   );
   logic [31:0] imemRdata;
   logic [31:0] imemAddr;
-  logic imemRen;
+  logic imemRen,imemOen;
   logic [31:0] dmemRdata;
   logic [31:0] dmemWdata;
   logic [2:0] dmemSize;
@@ -29,6 +29,7 @@ module soc (
          .usePredictor(usePredictor),
          .imemRdata(imemRdata),
          .imemRen(imemRen),
+         .imemOen(imemOen),
          .imemAddr(imemAddr),
          .dmemRdata(dmemRdata),
          .dmemRen(dmemRen),
@@ -41,7 +42,8 @@ module soc (
          .clk(clk),
          .rAddr(imemAddr),
          .rData(imemRdata),
-         .rEn(imemRen)
+         .rEn(imemRen),
+         .oEn(imemOen)
        );
   uartTx uartTx(
            .clk(clk),

@@ -1,7 +1,7 @@
 module imem #(
     parameter DEPTH = 16383  //16K for now
   )(
-    input logic rEn,
+    input logic rEn,oEn,
     output logic [31:0] rData,
     input logic [31:0] rAddr,
     input logic clk
@@ -13,7 +13,7 @@ module imem #(
   begin
     if(rEn)
     begin
-      rData <= mem[rAddr[ADDR_WIDTH+1:2]];
+      rData <= oEn?mem[rAddr[ADDR_WIDTH+1:2]]:0;
     end
   end
 

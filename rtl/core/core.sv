@@ -6,6 +6,7 @@ module core(
     input  logic [31:0]  imemRdata,
     output logic [31:0]  imemAddr,
     output logic         imemRen,
+    output logic         imemOen,
     input  logic [31:0]  dmemRdata,
     output logic [31:0]  dmemWdata,
     output logic [2:0]   dmemSize,
@@ -22,8 +23,8 @@ module core(
   logic         E_wrongBranch;
   logic [31:0]  E_pcTarget;
   // fetch -> decode
-  logic [31:0]  F_instr, F_pcPlus4, F_pc;
-  logic         F_bPredictedTaken;
+  logic [31:0]  F_instr, F_pcPlus4, F_pc,F_pc0,F_pcPlus40;
+  logic         F_bPredictedTaken,F_bPredictedTaken0;
   // decode -> execute
   logic [4:0]   D_rdAddr, D_r1Addr, D_r2Addr;
   logic         D_bPredictedTaken;
@@ -89,25 +90,41 @@ module core(
                .wrongBranchE(E_wrongBranch)
              );
 
-  stageInstFetch fetch (
-                   .clk             (clk),
-                   .rst             (rst),
-                   .bPredictTaken   (P_bPredictTaken),
-                   .usePredictor    (usePredictor),
-                   .pcSelE          (E_pcSel),
-                   .btbTarget       (P_btbTarget),
-                   .stall           (H_stallF),
-                   .flushF2         (H_flushF2),
-                   .pcTargetE       (E_pcTarget),
-                   .imemAddr        (imemAddr),
-                   .imemData        (imemRdata),
-                   .imemRen         (imemRen),
-                   .instr           (F_instr),
-                   .pcPlus4         (F_pcPlus4),
-                   .pc              (F_pc),
-                   .bPredictedTaken (F_bPredictedTaken)
+  stageFetch0 fetch0 (
+                .clk             (clk),
+                .rst             (rst),
+                .bPredictTaken   (P_bPredictTaken),
+                .usePredictor    (usePredictor),
+                .pcSelE          (E_pcSel),
+                .btbTarget       (P_btbTarget),
+                .stall           (H_stallF),
+                .wrongBranchE    (H_flushF2),
+                .pcTargetE       (E_pcTarget),
+                .imemAddr        (imemAddr),
+                .imemRen         (imemRen),
+                .pcPlus4         (F_pcPlus40),
+                .pc              (F_pc0),
+                .bPredictedTaken (F_bPredictedTaken0)
 
-                 );
+              );
+
+  stageFetch1 fetch1 (
+                .clk             (clk),
+                .rst             (rst),
+                .pcF0            (F_pc0),
+                .pcPlus4F0       (F_pcPlus40),
+                .flush           (H_flushF2),
+                .stall           (H_stallF),
+                .pc              (F_pc),
+                .imemRdata       (imemRdata),
+                .imemOen         (imemOen),
+                .instr           (F_instr),
+                .pcPlus4         (F_pcPlus4),
+                .bPredictedTakenF (F_bPredictedTaken0),
+                .bPredictedTaken (F_bPredictedTaken)
+
+
+              );
 
   stageDecode decode (
                 .clk                (clk),
@@ -269,7 +286,7 @@ module core(
   branchPredictor bPredict(
                     .clk         (clk),
                     .rst         (rst),
-                    .fetchPc     (F_pc),
+                    .fetchPc     (F_pc0),
                     .fetchHit    (P_bPredictTaken),
                     .fetchTarget (P_btbTarget),
                     .exTaken     (E_btbUpdate),
