@@ -3,7 +3,7 @@ TOPLEVEL_LANG ?= verilog
 WAVES = 1
 VERILOG_SOURCES += $(PWD)/rtl/*.sv
 VERILOG_SOURCES += $(PWD)/rtl/core/*.sv
-# EXTRA_ARGS += --trace --trace-structs --timing -j 8 
+EXTRA_ARGS += --trace --trace-fst --trace-structs --timing -j 8 
 EXTRA_ARGS += -Wno-WIDTHEXPAND
 TOPLEVEL = TB
 MODULE = test
@@ -23,7 +23,7 @@ data.bin: rv32i_test.elf
 code.mem: code.bin rv32i_test.dump
 		hexdump -v -e '1/4 "%08x\n"' code.bin > code.mem
 data.mem: data.bin
-		hexdump -v -e '1/1 "%02x\n"' data.bin > data.mem
+		hexdump -v -e '1/4 "%08x\n"' data.bin > data.mem
 
 sim: code.mem data.mem
 include $(shell cocotb-config --makefiles)/Makefile.sim
