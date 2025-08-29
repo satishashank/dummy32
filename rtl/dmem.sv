@@ -16,7 +16,7 @@ module dmem #(
   localparam WORDS = BYTES / 4;  // number of 32-bit words
   localparam ADDR_WIDTH_WORDS = $clog2(WORDS);
 
-  logic [31:0] mem[WORDS-1:0];
+  (* ram_style = "block" *) logic [31:0] mem[WORDS-1:0];
 
   logic isUartAddr;
   logic misaligned;

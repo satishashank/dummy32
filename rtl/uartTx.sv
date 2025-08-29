@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 module uartTx #(
-    parameter DIV = 2,
+    parameter DIV = 16,
     parameter int DWIDTH  = 8,
     parameter int FDEPTH = 32
   )(
