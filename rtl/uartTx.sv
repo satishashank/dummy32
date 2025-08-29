@@ -1,8 +1,8 @@
 `timescale 1ns/1ps
 module uartTx #(
-    parameter DIV = 8,
+    parameter DIV = 2,
     parameter int DWIDTH  = 8,
-    parameter int FDEPTH = 16
+    parameter int FDEPTH = 32
   )(
     input  logic              clk,
     input  logic              rst,

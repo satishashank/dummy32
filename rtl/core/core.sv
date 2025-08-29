@@ -1,305 +1,310 @@
-`timescale 1ns/1ps
-module core(
-    input  logic         clk,
-    input  logic         rst,
-    input logic          usePredictor,
-    input  logic [31:0]  imemRdata,
-    output logic [31:0]  imemAddr,
-    output logic         imemRen,
-    output logic         imemOen,
-    input  logic [31:0]  dmemRdata,
-    output logic [31:0]  dmemWdata,
-    output logic [2:0]   dmemSize,
-    output logic         dmemWen,
-    output logic         dmemRen,
-    output logic [31:0]  dmemAddr
-  );
+`timescale 1ns / 1ps
+module core (
+    input  logic        clk,
+    input  logic        rst,
+    input  logic        usePredictor,
+    input  logic [31:0] imemRdata,
+    output logic [31:0] imemAddr,
+    output logic        imemRen,
+    output logic        imemOen,
+    input  logic [31:0] dmemRdata,
+    output logic [31:0] dmemWdata,
+    output logic [ 2:0] dmemSize,
+    output logic        dmemWen,
+    output logic        dmemRen,
+    output logic [31:0] dmemAddr
+);
 
   // predictor -> fetch
-  logic         P_bPredictTaken;
-  logic [31:0]  P_btbTarget;
+  logic        P_bPredictTaken;
+  logic [31:0] P_btbTarget;
 
   // execute -> fetch
-  logic         E_wrongBranch;
-  logic [31:0]  E_pcTarget;
+  logic        E_wrongBranch;
+  logic [31:0] E_pcTarget;
   // fetch -> decode
-  logic [31:0]  F_instr, F_pcPlus4, F_pc,F_pc0,F_pcPlus40;
-  logic         F_bPredictedTaken,F_bPredictedTaken0;
+  logic [31:0] F_instr, F_pcPlus4, F_pc, F_pc0, F_pcPlus40;
+  logic F_bPredictedTaken, F_bPredictedTaken0;
   // decode -> execute
-  logic [4:0]   D_rdAddr, D_r1Addr, D_r2Addr;
-  logic         D_bPredictedTaken;
-  logic         D_regWrite, D_branch, D_jump,D_memWrite;
-  logic         D_useF7, D_useRegAdd, D_funct7_6;
-  logic [31:0]  D_pc, D_pcPlus4, D_a, D_b,D_immExt;
-  logic [2:0]   D_funct3;
-  logic [1:0]   D_aluSrcA, D_regSrc;
-  logic D_csrOp,D_aluSrcB;
+  logic [4:0] D_rdAddr, D_r1Addr, D_r2Addr;
+  logic D_bPredictedTaken;
+  logic D_regWrite, D_branch, D_jump, D_memWrite;
+  logic D_useF7, D_useRegAdd, D_funct7_6;
+  logic [31:0] D_pc, D_pcPlus4, D_a, D_b, D_immExt;
+  logic [2:0] D_funct3;
+  logic [1:0] D_aluSrcA, D_regSrc;
+  logic D_csrOp, D_aluSrcB;
   logic [11:0] D_csrAddr;
   // execute -> Decode
-  logic E_controlXfer,E_validInst;
+  logic E_controlXfer, E_validInst;
   // execute -> memory
-  logic [4:0]   E_rdAddr;
-  logic [2:0]   E_loadStoreSize;
-  logic [31:0]  E_aluResult, E_writeData, E_pcPlus4, E_pc,E_csrResult;
-  logic         E_regWrite, E_memWrite,E_csrWrite;
+  logic [4:0] E_rdAddr;
+  logic [2:0] E_loadStoreSize;
+  logic [31:0] E_aluResult, E_writeData, E_pcPlus4, E_pc, E_csrResult;
+  logic E_regWrite, E_memWrite, E_csrWrite;
   logic [11:0] E_csrAddr;
-  logic [1:0]   E_regSrc;
-  logic [4:0] E_r1Addr,E_r2Addr;
+  logic [ 1:0] E_regSrc;
+  logic [4:0] E_r1Addr, E_r2Addr;
   // execute -> predictor
-  logic         E_btbUpdate,E_pcSel,E_branch;
-  logic [31:0]  E_btbTarget;
+  logic E_btbUpdate, E_pcSel, E_branch;
+  logic [31:0] E_btbTarget;
   // memory -> writeback
-  logic [31:0]  M1_pcPlus4,M2_pcPlus4,M1_aluResult,M2_aluResult,M_readData,M_csrResult;
-  logic [4:0]   M1_rdAddr,M2_rdAddr;
-  logic         M1_regWrite,M2_regWrite,M_csrWrite;
-  logic [1:0]   M1_regSrc,M2_regSrc;
-  logic [11:0]  M_csrAddr;
-  logic [2:0]   M_dmemSize;
-  logic [31:0]  M_dmemWdata, M_dmemAddr,M_dmemRdata;
-  logic         M_dmemWen,M_dmemRen;
+  logic [31:0] M1_pcPlus4, M2_pcPlus4, M1_aluResult, M2_aluResult, M_readData, M_csrResult;
+  logic [4:0] M1_rdAddr, M2_rdAddr;
+  logic M1_regWrite, M2_regWrite, M_csrWrite;
+  logic [1:0] M1_regSrc, M2_regSrc;
+  logic [11:0] M_csrAddr;
+  logic [ 2:0] M_dmemSize;
+  logic [31:0] M_dmemWdata, M_dmemAddr, M_dmemRdata;
+  logic M_dmemWen, M_dmemRen;
   // writeback
-  logic [31:0]  W_rd,W_csrResult;
-  logic [4:0]   W_rdAddr;
-  logic [11:0]  W_csrAddr;
-  logic         W_regWrite,W_csrWrite;
+  logic [31:0] W_rd, W_csrResult;
+  logic [ 4:0] W_rdAddr;
+  logic [11:0] W_csrAddr;
+  logic W_regWrite, W_csrWrite;
   // forwarding & stall
-  logic         H_stallF,H_flushF2;
-  logic [1:0]   H_fwdAE, H_fwdBE;
-  logic         H_flushE, H_flushD, H_stallD;
+  logic H_stallF, H_flushF2;
+  logic [1:0] H_fwdAE, H_fwdBE;
+  logic H_fwdBD, H_fwdAD;
+  logic H_flushE, H_flushD, H_stallD;
 
   hazardUnit hazard (
-               .fwdAE       (H_fwdAE),
-               .fwdBE       (H_fwdBE),
-               .flushE      (H_flushE),
-               .flushD      (H_flushD),
-               .flushF2     (H_flushF2),
-               .stallD      (H_stallD),
-               .stallF      (H_stallF),
-               .r1AddrE     (E_r1Addr),
-               .r2AddrE     (E_r2Addr),
-               .r1AddrD     (D_r1Addr),
-               .r2AddrD     (D_r2Addr),
-               .rdM1        (M1_rdAddr),
-               .rdM2        (M2_rdAddr),
-               .rdE         (E_rdAddr),
-               .rdW         (W_rdAddr),
-               .regWriteM1  (M1_regWrite),
-               .regWriteM2  (M2_regWrite),
-               .regWriteW   (W_regWrite),
-               .regSrcE0    (E_regSrc[0]),
-               .wrongBranchE(E_wrongBranch)
-             );
+      .fwdAE       (H_fwdAE),
+      .fwdAD       (H_fwdAD),
+      .fwdBD       (H_fwdBD),
+      .fwdBE       (H_fwdBE),
+      .flushE      (H_flushE),
+      .flushD      (H_flushD),
+      .flushF2     (H_flushF2),
+      .stallD      (H_stallD),
+      .stallF      (H_stallF),
+      .r1AddrE     (E_r1Addr),
+      .r2AddrE     (E_r2Addr),
+      .r1AddrD     (D_r1Addr),
+      .r2AddrD     (D_r2Addr),
+      .rdM1        (M1_rdAddr),
+      .rdM2        (M2_rdAddr),
+      .rdE         (E_rdAddr),
+      .rdW         (W_rdAddr),
+      .regWriteM1  (M1_regWrite),
+      .regWriteM2  (M2_regWrite),
+      .regWriteW   (W_regWrite),
+      .regSrcE0    (E_regSrc[0]),
+      .wrongBranchE(E_wrongBranch)
+  );
 
   stageFetch0 fetch0 (
-                .clk             (clk),
-                .rst             (rst),
-                .bPredictTaken   (P_bPredictTaken),
-                .usePredictor    (usePredictor),
-                .pcSelE          (E_pcSel),
-                .btbTarget       (P_btbTarget),
-                .stall           (H_stallF),
-                .wrongBranchE    (H_flushF2),
-                .pcTargetE       (E_pcTarget),
-                .imemAddr        (imemAddr),
-                .imemRen         (imemRen),
-                .pcPlus4         (F_pcPlus40),
-                .pc              (F_pc0),
-                .bPredictedTaken (F_bPredictedTaken0)
+      .clk            (clk),
+      .rst            (rst),
+      .bPredictTaken  (P_bPredictTaken),
+      .usePredictor   (usePredictor),
+      .pcSelE         (E_pcSel),
+      .btbTarget      (P_btbTarget),
+      .stall          (H_stallF),
+      .wrongBranchE   (H_flushF2),
+      .pcTargetE      (E_pcTarget),
+      .imemAddr       (imemAddr),
+      .imemRen        (imemRen),
+      .pcPlus4        (F_pcPlus40),
+      .pc             (F_pc0),
+      .bPredictedTaken(F_bPredictedTaken0)
 
-              );
+  );
 
   stageFetch1 fetch1 (
-                .clk             (clk),
-                .rst             (rst),
-                .pcF0            (F_pc0),
-                .pcPlus4F0       (F_pcPlus40),
-                .flush           (H_flushF2),
-                .stall           (H_stallF),
-                .pc              (F_pc),
-                .imemRdata       (imemRdata),
-                .imemOen         (imemOen),
-                .instr           (F_instr),
-                .pcPlus4         (F_pcPlus4),
-                .bPredictedTakenF (F_bPredictedTaken0),
-                .bPredictedTaken (F_bPredictedTaken)
+      .clk             (clk),
+      .rst             (rst),
+      .pcF0            (F_pc0),
+      .pcPlus4F0       (F_pcPlus40),
+      .flush           (H_flushF2),
+      .stall           (H_stallF),
+      .pc              (F_pc),
+      .imemRdata       (imemRdata),
+      .imemOen         (imemOen),
+      .instr           (F_instr),
+      .pcPlus4         (F_pcPlus4),
+      .bPredictedTakenF(F_bPredictedTaken0),
+      .bPredictedTaken (F_bPredictedTaken)
 
 
-              );
+  );
 
   stageDecode decode (
-                .clk                (clk),
-                .rst                (rst),
-                .stall              (H_stallD),
-                .flush              (H_flushD),
-                .csrResultW         (W_csrResult),
-                .csrAddrW           (W_csrAddr),
-                .csrWriteW          (W_csrWrite),
-                .instrF             (F_instr),
-                .pcF                (F_pc),
-                .pcPlus4F           (F_pcPlus4),
-                .bPredictedTakenF   (F_bPredictedTaken),
-                .rdAddrW            (W_rdAddr),
-                .regWriteW          (W_regWrite),
-                .rdW                (W_rd),
-                .rdAddr             (D_rdAddr),
-                .r1Addr             (D_r1Addr),
-                .r2Addr             (D_r2Addr),
-                .a                  (D_a),
-                .b                  (D_b),
-                .immExt             (D_immExt),
-                .csrAddr            (D_csrAddr),
-                .wrongBranch        (E_wrongBranch),
-                .validInst          (E_validInst),
-                .csrOp              (D_csrOp),
-                .controlXfer        (E_controlXfer),
-                .bPredictedTaken    (D_bPredictedTaken),
-                .memWrite           (D_memWrite),
-                .regWrite           (D_regWrite),
-                .branch             (D_branch),
-                .jump               (D_jump),
-                .useF7              (D_useF7),
-                .useRegAdd          (D_useRegAdd),
-                .funct7_6           (D_funct7_6),
-                .pc                 (D_pc),
-                .pcPlus4            (D_pcPlus4),
-                .funct3             (D_funct3),
-                .aluSrcA            (D_aluSrcA),
-                .aluSrcB            (D_aluSrcB),
-                .regSrc             (D_regSrc)
-              );
+      .clk             (clk),
+      .rst             (rst),
+      .stall           (H_stallD),
+      .flush           (H_flushD),
+      .fwdAD           (H_fwdAD),
+      .fwdBD           (H_fwdBD),
+      .csrResultW      (W_csrResult),
+      .csrAddrW        (W_csrAddr),
+      .csrWriteW       (W_csrWrite),
+      .instrF          (F_instr),
+      .pcF             (F_pc),
+      .pcPlus4F        (F_pcPlus4),
+      .bPredictedTakenF(F_bPredictedTaken),
+      .rdAddrW         (W_rdAddr),
+      .regWriteW       (W_regWrite),
+      .rdW             (W_rd),
+      .rdAddr          (D_rdAddr),
+      .r1Addr          (D_r1Addr),
+      .r2Addr          (D_r2Addr),
+      .a               (D_a),
+      .b               (D_b),
+      .immExt          (D_immExt),
+      .csrAddr         (D_csrAddr),
+      .wrongBranch     (E_wrongBranch),
+      .validInst       (E_validInst),
+      .csrOp           (D_csrOp),
+      .controlXfer     (E_controlXfer),
+      .bPredictedTaken (D_bPredictedTaken),
+      .memWrite        (D_memWrite),
+      .regWrite        (D_regWrite),
+      .branch          (D_branch),
+      .jump            (D_jump),
+      .useF7           (D_useF7),
+      .useRegAdd       (D_useRegAdd),
+      .funct7_6        (D_funct7_6),
+      .pc              (D_pc),
+      .pcPlus4         (D_pcPlus4),
+      .funct3          (D_funct3),
+      .aluSrcA         (D_aluSrcA),
+      .aluSrcB         (D_aluSrcB),
+      .regSrc          (D_regSrc)
+  );
 
   stageExecute execute (
-                 .clk             (clk),
-                 .rst             (rst),
-                 .flush           (H_flushE),
-                 .fwdA            (H_fwdAE),
-                 .fwdB            (H_fwdBE),
-                 .aluResultM1     (M1_aluResult),
-                 .aluResultM2     (M2_aluResult),
-                 .readDataM2      (M_readData),
-                 .pcPlus4M1       (M1_pcPlus4),
-                 .pcPlus4M2       (M2_pcPlus4),
-                 .regSrcM1        (M1_regSrc),
-                 .regSrcM2        (M2_regSrc),
-                 .resultW         (W_rd),
-                 .pcD             (D_pc),
-                 .pcPlus4D        (D_pcPlus4),
-                 .aD              (D_a),
-                 .bD              (D_b),
-                 .immExtD         (D_immExt),
-                 .bPredictedTakenD(D_bPredictedTaken),
-                 .rdAddrD         (D_rdAddr),
-                 .r1AddrD         (D_r1Addr),
-                 .r2AddrD         (D_r2Addr),
-                 .regWriteD       (D_regWrite),
-                 .memWriteD       (D_memWrite),
-                 .branchD         (D_branch),
-                 .jumpD           (D_jump),
-                 .useF7D          (D_useF7),
-                 .useRegAddD      (D_useRegAdd),
-                 .funct7_6D       (D_funct7_6),
-                 .funct3D         (D_funct3),
-                 .aluSrcAD        (D_aluSrcA),
-                 .aluSrcBD        (D_aluSrcB),
-                 .regSrcD         (D_regSrc),
-                 .csrOpD          (D_csrOp),
-                 .csrAddrD        (D_csrAddr),
-                 .loadStoreSize   (E_loadStoreSize),
-                 .r1Addr          (E_r1Addr),
-                 .r2Addr          (E_r2Addr),
-                 .rdAddr          (E_rdAddr),
-                 .aluResult       (E_aluResult),
-                 .writeData       (E_writeData),
-                 .pcPlus4         (E_pcPlus4),
-                 .pcTarget        (E_pcTarget),
-                 .regWrite        (E_regWrite),
-                 .memWrite        (E_memWrite),
-                 .regSrc          (E_regSrc),
-                 .btbUpdate       (E_btbUpdate),
-                 .branch          (E_branch),
-                 .wrongBranch     (E_wrongBranch),
-                 .validInst       (E_validInst),
-                 .controlXfer     (E_controlXfer),
-                 .pc              (E_pc),
-                 .btbTarget       (E_btbTarget),
-                 .pcSel           (E_pcSel),
-                 .csrAddr         (E_csrAddr),
-                 .csrWrite        (E_csrWrite),
-                 .csrResult       (E_csrResult)
-               );
+      .clk             (clk),
+      .rst             (rst),
+      .flush           (H_flushE),
+      .fwdA            (H_fwdAE),
+      .fwdB            (H_fwdBE),
+      .aluResultM1     (M1_aluResult),
+      .aluResultM2     (M2_aluResult),
+      .readDataM2      (M_readData),
+      .pcPlus4M1       (M1_pcPlus4),
+      .pcPlus4M2       (M2_pcPlus4),
+      .regSrcM1        (M1_regSrc),
+      .regSrcM2        (M2_regSrc),
+      .resultW         (W_rd),
+      .pcD             (D_pc),
+      .pcPlus4D        (D_pcPlus4),
+      .aD              (D_a),
+      .bD              (D_b),
+      .immExtD         (D_immExt),
+      .bPredictedTakenD(D_bPredictedTaken),
+      .rdAddrD         (D_rdAddr),
+      .r1AddrD         (D_r1Addr),
+      .r2AddrD         (D_r2Addr),
+      .regWriteD       (D_regWrite),
+      .memWriteD       (D_memWrite),
+      .branchD         (D_branch),
+      .jumpD           (D_jump),
+      .useF7D          (D_useF7),
+      .useRegAddD      (D_useRegAdd),
+      .funct7_6D       (D_funct7_6),
+      .funct3D         (D_funct3),
+      .aluSrcAD        (D_aluSrcA),
+      .aluSrcBD        (D_aluSrcB),
+      .regSrcD         (D_regSrc),
+      .csrOpD          (D_csrOp),
+      .csrAddrD        (D_csrAddr),
+      .loadStoreSize   (E_loadStoreSize),
+      .r1Addr          (E_r1Addr),
+      .r2Addr          (E_r2Addr),
+      .rdAddr          (E_rdAddr),
+      .aluResult       (E_aluResult),
+      .writeData       (E_writeData),
+      .pcPlus4         (E_pcPlus4),
+      .pcTarget        (E_pcTarget),
+      .regWrite        (E_regWrite),
+      .memWrite        (E_memWrite),
+      .regSrc          (E_regSrc),
+      .btbUpdate       (E_btbUpdate),
+      .branch          (E_branch),
+      .wrongBranch     (E_wrongBranch),
+      .validInst       (E_validInst),
+      .controlXfer     (E_controlXfer),
+      .pc              (E_pc),
+      .btbTarget       (E_btbTarget),
+      .pcSel           (E_pcSel),
+      .csrAddr         (E_csrAddr),
+      .csrWrite        (E_csrWrite),
+      .csrResult       (E_csrResult)
+  );
 
   stageMem mem (
-             .clk            (clk),
-             .rst            (rst),
-             .regSrcE        (E_regSrc),
-             .regWriteE      (E_regWrite),
-             .csrWriteE      (E_csrWrite),
-             .csrAddrE       (E_csrAddr),
-             .csrResultE     (E_csrResult),
-             .memWriteE      (E_memWrite),
-             .aluResultE     (E_aluResult),
-             .writeDataE     (E_writeData),
-             .pcPlus4E       (E_pcPlus4),
-             .rdAddrE        (E_rdAddr),
-             .loadStoreSizeE (E_loadStoreSize),
-             .pcPlus41       (M1_pcPlus4),
-             .pcPlus42       (M2_pcPlus4),
-             .readData       (M_readData),
-             .rdAddr1        (M1_rdAddr),
-             .rdAddr2        (M2_rdAddr),
-             .regWrite1      (M1_regWrite),
-             .regWrite2      (M2_regWrite),
-             .regSrc1        (M1_regSrc),
-             .aluResult1     (M1_aluResult),
-             .regSrc2        (M2_regSrc),
-             .aluResult2     (M2_aluResult),
-             .dmemRdata      (M_dmemRdata),
-             .dmemSize       (M_dmemSize),
-             .dmemWdata      (M_dmemWdata),
-             .dmemAddr       (M_dmemAddr),
-             .dmemWen        (M_dmemWen),
-             .dmemRen        (M_dmemRen),
-             .csrWrite       (M_csrWrite),
-             .csrResult      (M_csrResult),
-             .csrAddr        (M_csrAddr)
-           );
+      .clk           (clk),
+      .rst           (rst),
+      .regSrcE       (E_regSrc),
+      .regWriteE     (E_regWrite),
+      .csrWriteE     (E_csrWrite),
+      .csrAddrE      (E_csrAddr),
+      .csrResultE    (E_csrResult),
+      .memWriteE     (E_memWrite),
+      .aluResultE    (E_aluResult),
+      .writeDataE    (E_writeData),
+      .pcPlus4E      (E_pcPlus4),
+      .rdAddrE       (E_rdAddr),
+      .loadStoreSizeE(E_loadStoreSize),
+      .pcPlus41      (M1_pcPlus4),
+      .pcPlus42      (M2_pcPlus4),
+      .readData      (M_readData),
+      .rdAddr1       (M1_rdAddr),
+      .rdAddr2       (M2_rdAddr),
+      .regWrite1     (M1_regWrite),
+      .regWrite2     (M2_regWrite),
+      .regSrc1       (M1_regSrc),
+      .aluResult1    (M1_aluResult),
+      .regSrc2       (M2_regSrc),
+      .aluResult2    (M2_aluResult),
+      .dmemRdata     (M_dmemRdata),
+      .dmemSize      (M_dmemSize),
+      .dmemWdata     (M_dmemWdata),
+      .dmemAddr      (M_dmemAddr),
+      .dmemWen       (M_dmemWen),
+      .dmemRen       (M_dmemRen),
+      .csrWrite      (M_csrWrite),
+      .csrResult     (M_csrResult),
+      .csrAddr       (M_csrAddr)
+  );
 
   stageWback wback (
-               .clk        (clk),
-               .rst        (rst),
-               .regSrcM    (M2_regSrc),
-               .regWriteM  (M2_regWrite),
-               .rdAddrM    (M2_rdAddr),
-               .aluResultM (M2_aluResult),
-               .readDataM  (M_readData),
-               .pcPlus4M   (M2_pcPlus4),
-               .csrResultM (M_csrResult),
-               .csrAddrM   (M_csrAddr),
-               .csrWriteM  (M_csrWrite),
-               .regWrite   (W_regWrite),
-               .rdAddr     (W_rdAddr),
-               .regResult  (W_rd),
-               .csrResult  (W_csrResult),
-               .csrAddr    (W_csrAddr),
-               .csrWrite   (W_csrWrite)
-             );
-  branchPredictor bPredict(
-                    .clk         (clk),
-                    .rst         (rst),
-                    .fetchPc     (F_pc0),
-                    .fetchHit    (P_bPredictTaken),
-                    .fetchTarget (P_btbTarget),
-                    .exTaken     (E_btbUpdate),
-                    .exTarget    (E_btbTarget),
-                    .exBranch    (E_branch),
-                    .exPc        (E_pc)
-                  );
+      .clk       (clk),
+      .rst       (rst),
+      .regSrcM   (M2_regSrc),
+      .regWriteM (M2_regWrite),
+      .rdAddrM   (M2_rdAddr),
+      .aluResultM(M2_aluResult),
+      .readDataM (M_readData),
+      .pcPlus4M  (M2_pcPlus4),
+      .csrResultM(M_csrResult),
+      .csrAddrM  (M_csrAddr),
+      .csrWriteM (M_csrWrite),
+      .regWrite  (W_regWrite),
+      .rdAddr    (W_rdAddr),
+      .regResult (W_rd),
+      .csrResult (W_csrResult),
+      .csrAddr   (W_csrAddr),
+      .csrWrite  (W_csrWrite)
+  );
+  branchPredictor bPredict (
+      .clk        (clk),
+      .rst        (rst),
+      .fetchPc    (F_pc0),
+      .fetchHit   (P_bPredictTaken),
+      .fetchTarget(P_btbTarget),
+      .exTaken    (E_btbUpdate),
+      .exTarget   (E_btbTarget),
+      .exBranch   (E_branch),
+      .exPc       (E_pc)
+  );
 
-  assign dmemSize  = M_dmemSize;
+  assign dmemSize = M_dmemSize;
   assign M_dmemRdata = dmemRdata;
   assign dmemWdata = M_dmemWdata;
-  assign dmemAddr  = M_dmemAddr;
-  assign dmemWen   = M_dmemWen;
-  assign dmemRen   = M_dmemRen;
+  assign dmemAddr = M_dmemAddr;
+  assign dmemWen = M_dmemWen;
+  assign dmemRen = M_dmemRen;
 
 endmodule

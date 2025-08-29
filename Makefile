@@ -13,7 +13,7 @@ src_dir := ./tests
 all: code.mem data.mem sim
 
 rv32i_test.elf:link.ld boot.s test.s test.c
-		riscv32-unknown-elf-gcc -nostdlib -nostartfiles -march=rv32i_zicsr -mabi=ilp32 -T link.ld test.s -o rv32i_test.elf
+		riscv32-unknown-elf-gcc -nostdlib -nostartfiles -march=rv32i_zicsr -mabi=ilp32 -T link.ld boot.s test.c -o rv32i_test.elf
 rv32i_test.dump: rv32i_test.elf
 		riscv32-unknown-elf-objdump -D rv32i_test.elf > rv32i_test.dump
 code.bin:rv32i_test.elf
